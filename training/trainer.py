@@ -9,3 +9,6 @@ Ce fichier contiendra les fonctions principales train_one_epoch et evaluate, com
 """
 
 # TODO
+
+def run(args):
+    return
