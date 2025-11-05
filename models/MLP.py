@@ -4,7 +4,6 @@ class MLP(nn.Module):
     def __init__(self, in_features, hidden_features, out_features, num_layers, size_layers):
         super().__init__()
         self.num_layers = num_layers
-        self.size_layers = size_layers
 
         if num_layers == 1:
             hidden_features = out_features
