@@ -60,17 +60,13 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
         writer.add_scalar('train/acc1', acc1.item(), n_iter)
         writer.add_scalar('train/lr', optimizer.param_groups[0]["lr"], n_iter)
         
-        # ===================================================
         # compute computation time and *compute_efficiency*
-        # TODO: Do something with the time metrics
         process_time = start_time-time.time()-prepare_time
         compute_efficiency = process_time/(process_time+prepare_time)
         pbar.set_description(
             f'Compute efficiency: {compute_efficiency:.2f}, ' 
             f'loss: {loss.item():.2f},  epoch: {epoch}/{args.epochs}')
         start_time = time.time()
-        #
-        # ===================================================
 
         n_iter += 1
     
