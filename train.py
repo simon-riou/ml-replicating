@@ -15,7 +15,7 @@ def get_args_parser(add_help=True):
     )
     parser.add_argument("--epochs", default=90, type=int, metavar="N", help="number of total epochs to run")
     parser.add_argument(
-        "-j", "--num-workers", default=16, type=int, metavar="N", help="number of data loading workers (default: 16)"
+        "-j", "--num-workers", default=2, type=int, metavar="N", help="number of data loading workers (default: 16)"
     )
     #parser.add_argument("--opt", default="sgd", type=str, help="optimizer")
     parser.add_argument("--lr", default=0.1, type=float, help="initial learning rate")
@@ -62,7 +62,9 @@ def get_args_parser(add_help=True):
     #parser.add_argument("--lr-gamma", default=0.1, type=float, help="decrease lr by a factor of lr-gamma")
     #parser.add_argument("--lr-min", default=0.0, type=float, help="minimum lr of lr schedule (default: 0.0)")
     #parser.add_argument("--print-freq", default=10, type=int, help="print frequency")
-    parser.add_argument("--output-dir", default=".", type=str, help="path to save outputs")
+    parser.add_argument("--tb-dir", default=".", type=str, help="tensorboard path to save logs")
+    parser.add_argument("--run-dir", default="runs", type=str, help="path to save saved models")
+    parser.add_argument("--max-keep", default=5, type=int, help="maximum saved models")
     parser.add_argument("--resume", default="", type=str, help="path of checkpoint")
     parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="start epoch")
     #parser.add_argument(

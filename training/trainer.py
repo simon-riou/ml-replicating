@@ -2,6 +2,7 @@
 
 import datetime
 import os
+from pathlib import Path
 import time
 import warnings
 
@@ -76,7 +77,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
     return n_iter
 
 
-def evaluate(model, criterion, optimizer, data_loader, device, writer=None, epoch=0, log_suffix=""):
+def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None, epoch=0, n_iter=0, log_suffix=""):
     model.eval()
 
     total_loss = 0.0
@@ -124,7 +125,9 @@ def evaluate(model, criterion, optimizer, data_loader, device, writer=None, epoc
         'epoch': epoch,
         'optim': optimizer.state_dict()
     }
-    save_checkpoint(cpkt, 'model_checkpoint.ckpt')
+
+    save_path = args.run_dir / f"model_ckpt_epoch_{epoch}_iter_{n_iter}.ckpt"
+    save_checkpoint(cpkt, save_path, is_best=False, max_keep=args.max_keep)
     # ===================================================
 
     return avg_acc1
@@ -171,7 +174,7 @@ def train(args):
     # ===================================================
     
 
-    writer = SummaryWriter(log_dir=args.output_dir)
+    writer = SummaryWriter(log_dir=args.tb_dir)
     
     model = models.AlexNet.AlexNet(3, 10)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
@@ -188,6 +191,11 @@ def train(args):
         optimizer.load_state_dict(ckpt['optim'])
         print("last checkpoint restored")
 
+    # Create the folder to save models
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
+    os.makedirs(args.run_dir, exist_ok=True)
+
     model.to(device)
     n_iter = start_n_iter # Global iterator
     for epoch in range(start_epoch, args.epochs):
@@ -195,7 +203,7 @@ def train(args):
         n_iter = train_one_epoch(model, criterion, optimizer, train_data_loader, device, epoch, args, writer, n_iter)
         
         # Evaluating
-        evaluate(model, criterion, optimizer, test_data_loader, device, writer, epoch)
-        
+        evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch, n_iter)
+
         
     writer.close()
