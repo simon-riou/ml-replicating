@@ -1,3 +1,8 @@
+import argparse
+import yaml
+import sys
+from pprint import pprint
+
 from training.trainer import train
 
 # TODO: Fix the param in argparse -> little by little
@@ -7,7 +12,8 @@ def get_args_parser(add_help=True):
 
     parser = argparse.ArgumentParser(description="PyTorch Classification Training", add_help=add_help)
 
-    parser.add_argument("--data-path", default="/datasets01/imagenet_full_size/061417/", type=str, help="dataset path")
+    parser.add_argument("--data-path", default="data", type=str, help="dataset path")
+    parser.add_argument("--config", default="", type=str, help="config path")
     #parser.add_argument("--model", default="resnet18", type=str, help="model name")
     parser.add_argument("--device", default="cuda", type=str, help="device (Use cuda or cpu Default: cuda)")
     parser.add_argument(
@@ -134,6 +140,24 @@ def get_args_parser(add_help=True):
     #parser.add_argument("--weights", default=None, type=str, help="the weights enum name to load")
     #parser.add_argument("--backend", default="PIL", type=str.lower, help="PIL or tensor - case insensitive")
     #parser.add_argument("--use-v2", action="store_true", help="Use V2 transforms")
+
+    args, _ = parser.parse_known_args(sys.argv[1:])
+    if args.config:
+        try:
+            with open(args.config, 'r') as f:
+                yaml_config = yaml.safe_load(f)
+            
+            parser.set_defaults(**yaml_config)
+            print(f"Configuration loaded from: {args.config}")
+            pprint(yaml_config)
+
+        except FileNotFoundError:
+            print(f"Error: Configuration file not found at {args.config}")
+            sys.exit(1)
+        except yaml.YAMLError as exc:
+            print(f"Error reading YAML file: {exc}")
+            sys.exit(1)
+
     return parser
 
 

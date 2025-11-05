@@ -4,3 +4,4 @@ numpy
 tqdm
 matplotlib
 tensorboard
+PyYAML

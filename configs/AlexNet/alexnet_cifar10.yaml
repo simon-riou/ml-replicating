@@ -1,0 +1,16 @@
+# Config specific
+data_path: "./data/cifar10"
+device: "cuda"
+num_workers: 8
+
+# Hyperparameters
+batch_size: 128
+epochs: 5
+lr: 0.03
+momentum: 0.9
+clip_grad_norm: 1.0
+
+# File save/logs settings
+run_dir: "runs/alexnet_cifar10_exp1"
+tb_dir: "tb-output"
+max_keep: 2
