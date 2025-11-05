@@ -70,6 +70,11 @@ def get_args_parser(add_help=True):
     #parser.add_argument("--print-freq", default=10, type=int, help="print frequency")
     parser.add_argument("--tb-dir", default="tb-output", type=str, help="tensorboard path to save logs")
     parser.add_argument("--run-dir", default="runs", type=str, help="path to save saved models")
+    parser.add_argument(
+        "--no-save", 
+        action="store_true", 
+        help="If set, models and checkpoints will NOT be saved."
+    )
     parser.add_argument("--max-keep", default=5, type=int, help="maximum saved models")
     parser.add_argument("--resume", default="", type=str, help="path of checkpoint")
     parser.add_argument("--start-epoch", default=0, type=int, metavar="N", help="start epoch")
@@ -150,6 +155,7 @@ def get_args_parser(add_help=True):
             parser.set_defaults(**yaml_config)
             print(f"Configuration loaded from: {args.config}")
             pprint(yaml_config)
+            print()
 
         except FileNotFoundError:
             print(f"Error: Configuration file not found at {args.config}")

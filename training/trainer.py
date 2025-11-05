@@ -113,19 +113,17 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
         writer.add_scalar(f'eval/loss{log_suffix}', avg_loss, epoch)
         writer.add_scalar(f'eval/acc1{log_suffix}', avg_acc1, epoch)
 
-    # ===================================================
-    # TODO: add bool check in parsed args
-    # save checkpoint if needed
-    cpkt = {
-        'net': model.state_dict(),
-        'epoch': epoch,
-        'n_iter': n_iter,
-        'optim': optimizer.state_dict()
-    }
+    if not args.no_save:
+        # save checkpoint if needed
+        cpkt = {
+            'net': model.state_dict(),
+            'epoch': epoch,
+            'n_iter': n_iter,
+            'optim': optimizer.state_dict()
+        }
 
-    save_path = args.run_dir / f"model_ckpt_epoch_{epoch}_iter_{n_iter}.ckpt"
-    save_checkpoint(cpkt, save_path, is_best=False, max_keep=args.max_keep)
-    # ===================================================
+        save_path = args.run_dir / f"model_ckpt_epoch_{epoch}_iter_{n_iter}.ckpt"
+        save_checkpoint(cpkt, save_path, is_best=False, max_keep=args.max_keep)
 
     return avg_acc1
 
@@ -187,15 +185,19 @@ def train(args):
         start_epoch = ckpt['epoch']
         start_n_iter = ckpt['n_iter']
         optimizer.load_state_dict(ckpt['optim'])
-        print("last checkpoint restored")
+        print("last checkpoint restored\n")
 
     # Create the folder to save models
-    if start_epoch < args.epochs:
+    if not args.no_save and start_epoch < args.epochs:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
         os.makedirs(args.run_dir, exist_ok=True)
 
     model.to(device)
+
+    # Warning
+    if start_epoch >= args.epochs:
+        print(' [!] Model trained on max epoch already ! Update the --epochs argument to increase the number of epochs.')
 
     n_iter = start_n_iter # Global iterator
     for epoch in range(start_epoch, args.epochs):
@@ -205,5 +207,5 @@ def train(args):
         # Evaluating
         evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter)
 
-        
+
     writer.close()
