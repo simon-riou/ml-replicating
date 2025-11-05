@@ -1,1 +1,5 @@
-#TODO
+torch
+torchvision
+numpy
+tqdm
+matplotlib
