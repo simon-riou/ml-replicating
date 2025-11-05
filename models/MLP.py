@@ -2,7 +2,7 @@ import torch.nn as nn
 
 class MLP(nn.Module):
     def __init__(self, in_features, hidden_features, out_features, num_layers):
-        super().__init__()
+        super(MLP, self).__init__()
         self.num_layers = num_layers
 
         if num_layers == 1:
