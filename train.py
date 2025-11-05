@@ -8,7 +8,7 @@ from training.trainer import train
 # TODO: Fix the param in argparse -> little by little
 
 """
-The architecture was inspired by the foloowings :
+The architecture was inspired by the following repos :
     - https://github.com/pytorch/vision/blob/ca2212438fdd8ce29b66999ed70ed54b0f9372d1/references/classification/train.py#L215
     - https://github.com/IgorSusmelj/pytorch-styleguide/tree/master
 """
