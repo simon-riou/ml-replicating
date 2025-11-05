@@ -152,7 +152,7 @@ def train(args):
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
 
-    train_dataset = datasets.CIFAR10(root='cifar10',
+    train_dataset = datasets.CIFAR10(root=args.data_path,
                                      train=True, 
                                      transform=train_transforms, 
                                      download=True)
@@ -162,7 +162,7 @@ def train(args):
                                         drop_last=True,
                                         num_workers=args.num_workers)
 
-    test_dataset = datasets.CIFAR10(root='cifar10',
+    test_dataset = datasets.CIFAR10(root=args.data_path,
                                      train=False, 
                                      transform=test_transforms, 
                                      download=True)
