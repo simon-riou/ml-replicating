@@ -68,7 +68,7 @@ def get_args_parser(add_help=True):
     #parser.add_argument("--lr-gamma", default=0.1, type=float, help="decrease lr by a factor of lr-gamma")
     #parser.add_argument("--lr-min", default=0.0, type=float, help="minimum lr of lr schedule (default: 0.0)")
     #parser.add_argument("--print-freq", default=10, type=int, help="print frequency")
-    parser.add_argument("--tb-dir", default=".", type=str, help="tensorboard path to save logs")
+    parser.add_argument("--tb-dir", default="tb-output", type=str, help="tensorboard path to save logs")
     parser.add_argument("--run-dir", default="runs", type=str, help="path to save saved models")
     parser.add_argument("--max-keep", default=5, type=int, help="maximum saved models")
     parser.add_argument("--resume", default="", type=str, help="path of checkpoint")

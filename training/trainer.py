@@ -123,6 +123,7 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
     cpkt = {
         'net': model.state_dict(),
         'epoch': epoch,
+        'n_iter': n_iter,
         'optim': optimizer.state_dict()
     }
 
@@ -184,26 +185,29 @@ def train(args):
     start_n_iter = 0
     start_epoch = 0
     if args.resume:
-        ckpt = load_checkpoint(args.path_to_checkpoint) # custom method for loading last checkpoint
+        ckpt = load_checkpoint(args.resume) # custom method for loading last checkpoint
         model.load_state_dict(ckpt['net'])
+        model.to(device)
         start_epoch = ckpt['epoch']
         start_n_iter = ckpt['n_iter']
         optimizer.load_state_dict(ckpt['optim'])
         print("last checkpoint restored")
 
     # Create the folder to save models
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
-    os.makedirs(args.run_dir, exist_ok=True)
+    if start_epoch < args.epochs:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
+        os.makedirs(args.run_dir, exist_ok=True)
 
     model.to(device)
+
     n_iter = start_n_iter # Global iterator
     for epoch in range(start_epoch, args.epochs):
         # Training
-        n_iter = train_one_epoch(model, criterion, optimizer, train_data_loader, device, epoch, args, writer, n_iter)
+        n_iter = train_one_epoch(model, criterion, optimizer, train_data_loader, device, epoch+1, args, writer, n_iter)
         
         # Evaluating
-        evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch, n_iter)
+        evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter)
 
         
     writer.close()
