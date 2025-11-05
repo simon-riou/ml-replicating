@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import time
 import warnings
+import random
 
 import torch
 import torch.utils.data
@@ -130,7 +131,30 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
 
 
 def train(args):
+    # Get device
     device = args.device if torch.cuda.is_available() else "cpu"
+
+    # Set deterministic mode
+    worker_init_fn = None
+    if args.use_deterministic_algorithms is not None:
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+        torch.backends.cudnn.benchmark = False
+        torch.use_deterministic_algorithms(True)
+
+        torch.manual_seed(args.use_deterministic_algorithms)
+        np.random.seed(args.use_deterministic_algorithms)
+        torch.cuda.manual_seed_all(args.use_deterministic_algorithms)
+
+        def worker_init_fn(worker_id):                                                                                                                                                                                                                                                                         
+            torch.manual_seed(args.use_deterministic_algorithms)                                                                                                                                   
+            torch.cuda.manual_seed(args.use_deterministic_algorithms)                                                                                                                              
+            torch.cuda.manual_seed_all(args.use_deterministic_algorithms)                                                                                          
+            np.random.seed(args.use_deterministic_algorithms)                                                                                                             
+            random.seed(args.use_deterministic_algorithms)                                                                                                       
+            torch.manual_seed(args.use_deterministic_algorithms)                                                                                                                                   
+            return
+    else:
+        torch.backends.cudnn.benchmark = True
 
     # ===================================================
     # ===================================================
@@ -149,12 +173,13 @@ def train(args):
 
     train_dataset = datasets.CIFAR10(root=args.data_path,
                                      train=True, 
-                                     transform=train_transforms, 
+                                     transform=train_transforms,
                                      download=True)
     train_data_loader = data.DataLoader(train_dataset, 
                                         batch_size=args.batch_size, 
                                         shuffle=True,
                                         drop_last=True,
+                                        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
                                         num_workers=args.num_workers)
 
     test_dataset = datasets.CIFAR10(root=args.data_path,
@@ -164,6 +189,7 @@ def train(args):
     test_data_loader = data.DataLoader(test_dataset, 
                                         batch_size=args.batch_size, 
                                         shuffle=False,
+                                        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
                                         num_workers=args.num_workers)
     # ===================================================
     # ===================================================

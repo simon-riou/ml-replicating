@@ -122,9 +122,9 @@ def get_args_parser(add_help=True):
     #    default=0.99998,
     #    help="decay factor for Exponential Moving Average of model parameters (default: 0.99998)",
     #)
-    #parser.add_argument(
-    #    "--use-deterministic-algorithms", action="store_true", help="Forces the use of deterministic algorithms only."
-    #)
+    parser.add_argument(
+        "--use-deterministic-algorithms", default=None, type=int, metavar="SEED", help="Forces the use of deterministic algorithms only with the given SEED."
+    )
     #parser.add_argument(
     #    "--interpolation", default="bilinear", type=str, help="the interpolation method (default: bilinear)"
     #)
@@ -166,7 +166,7 @@ def get_args_parser(add_help=True):
 
     return parser
 
-
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
+    
     train(args)
