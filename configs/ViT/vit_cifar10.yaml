@@ -22,6 +22,9 @@ criterion:
 # Learning rate scheduler configuration
 scheduler:
   type: "LinearLR"
+  start_factor: 1
+  end_factor: 0.333333333333
+  total_iter: 10
 
 # File save/logs settings
 run_dir: "runs/alexnet_cifar10_exp1"

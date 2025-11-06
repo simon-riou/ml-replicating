@@ -1,0 +1,26 @@
+
+# Config specific
+data_path: "./data/mnist"
+device: "cuda"
+num_workers: 8
+
+# Hyperparameters
+batch_size: 128
+epochs: 300
+
+# Optimizer configuration
+optimizer:
+  type: "Adam"
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler configuration
+#scheduler:
+#  type: "LinearLR"
+
+# File save/logs settings
+run_dir: "runs/vit_mnist_exp1"
+tb_dir: "/workspace"
+max_keep: 1
