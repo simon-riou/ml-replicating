@@ -1,0 +1,29 @@
+# Config specific
+data_path: "./data/cifar10" # <-- path to dataset or to loc to download   (default: data/)
+device: "cuda"              # <-- device                                  (default: cuda)
+num_workers: 8              # <-- number of process for the dataloader    (default: 2) 
+
+# Hyperparameters
+batch_size: 4096            #                                             (default: 32)
+epochs: 90                  #                                             (default: 90)
+
+# Optimizer configuration
+optimizer:                  #                                             (default: Only available in config file not in CLI)
+  type: "Adam"              # Any parameters available in the doc
+  betas: [0.9, 0.999]       # ...
+  lr: 0.001                 # ...
+  weight_decay: 0.03        # ...
+
+# Criterion (loss function) configuration
+criterion:                  #                                             (default: Only available in config file not in CLI)
+  type: "CrossEntropyLoss"  # Any parameters available in the doc
+  label_smoothing: 0.1      # ...
+
+# Learning rate scheduler configuration
+scheduler:                  #                                             (default: Only available in config file not in CLI)
+  type: "LinearLR"          # ...
+
+# File save/logs settings
+run_dir: "runs/model"       # <-- path to save the model during training  (default: runs/)
+tb_dir: "tb-output"         # <-- path to save the tensorboard files      (default: tb-output/)
+max_keep: 2                 # <-- max number of model to be saved         (default: 2)
