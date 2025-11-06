@@ -21,6 +21,7 @@ from tqdm.auto import tqdm
 import utils
 from utils.checkpoints import *
 from utils.metrics import *
+from utils.builders import build_optimizer, build_criterion, build_scheduler
 
 import models
 
@@ -197,9 +198,25 @@ def train(args):
 
     writer = SummaryWriter(log_dir=args.tb_dir)
     
-    model = models.ViT.ViT(3, 7, 12, 128, 16, 10)
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-    criterion = torch.nn.CrossEntropyLoss()
+
+    # ===================================================
+    # ===================================================
+    # TODO: Let the config choose
+    model = models.ViT.ViT(
+        img_size=28,
+        in_channels=3,
+        patch_size=7,
+        nb_blocks=12,
+        embed_dim=128, # 768
+        num_heads=16, # 12
+        out_classes=10
+    )
+    # ===================================================
+    # ===================================================
+    
+    optimizer = build_optimizer(args, model.parameters())
+    criterion = build_criterion(args)
+    lr_scheduler = build_scheduler(args, optimizer)
 
      # load checkpoint if needed/ wanted
     start_n_iter = 0
@@ -215,13 +232,13 @@ def train(args):
 
     # Create the folder to save models
     if not args.no_save and start_epoch < args.epochs:
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
         args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
         os.makedirs(args.run_dir, exist_ok=True)
 
     model.to(device)
 
-    # Warning
+    # Warning for --resume training
     if start_epoch >= args.epochs:
         print(' [!] Model trained on max epoch already ! Update the --epochs argument to increase the number of epochs.')
 
@@ -232,6 +249,9 @@ def train(args):
         
         # Evaluating
         evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter)
+
+        if lr_scheduler is not None:
+            lr_scheduler.step()
 
 
     writer.close()

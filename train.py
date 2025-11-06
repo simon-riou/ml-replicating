@@ -6,6 +6,7 @@ from pprint import pprint
 from training.trainer import train
 
 # TODO: Fix the param in argparse -> little by little
+# - Add verbose
 
 """
 The architecture was inspired by the following repos :
@@ -29,50 +30,6 @@ def get_args_parser(add_help=True):
     parser.add_argument(
         "-j", "--num-workers", default=2, type=int, metavar="N", help="number of data loading workers (default: 16)"
     )
-    #parser.add_argument("--opt", default="sgd", type=str, help="optimizer")
-    parser.add_argument("--lr", default=0.1, type=float, help="initial learning rate")
-    parser.add_argument("--momentum", default=0.9, type=float, metavar="M", help="momentum")
-    #parser.add_argument(
-    #    "--wd",
-    #    "--weight-decay",
-    #    default=1e-4,
-    #    type=float,
-    #    metavar="W",
-    #    help="weight decay (default: 1e-4)",
-    #    dest="weight_decay",
-    #)
-    #parser.add_argument(
-    #    "--norm-weight-decay",
-    #    default=None,
-    #    type=float,
-    #    help="weight decay for Normalization layers (default: None, same value as --wd)",
-    #)
-    #parser.add_argument(
-    #    "--bias-weight-decay",
-    #    default=None,
-    #    type=float,
-    #    help="weight decay for bias parameters of all layers (default: None, same value as --wd)",
-    #)
-    #parser.add_argument(
-    #    "--transformer-embedding-decay",
-    #    default=None,
-    #    type=float,
-    #    help="weight decay for embedding parameters for vision transformer models (default: None, same value as --wd)",
-    #)
-    #parser.add_argument(
-    #    "--label-smoothing", default=0.0, type=float, help="label smoothing (default: 0.0)", dest="label_smoothing"
-    #)
-    #parser.add_argument("--mixup-alpha", default=0.0, type=float, help="mixup alpha (default: 0.0)")
-    #parser.add_argument("--cutmix-alpha", default=0.0, type=float, help="cutmix alpha (default: 0.0)")
-    #parser.add_argument("--lr-scheduler", default="steplr", type=str, help="the lr scheduler (default: steplr)")
-    #parser.add_argument("--lr-warmup-epochs", default=0, type=int, help="the number of epochs to warmup (default: 0)")
-    #parser.add_argument(
-    #    "--lr-warmup-method", default="constant", type=str, help="the warmup method (default: constant)"
-    #)
-    #parser.add_argument("--lr-warmup-decay", default=0.01, type=float, help="the decay for lr")
-    #parser.add_argument("--lr-step-size", default=30, type=int, help="decrease lr every step-size epochs")
-    #parser.add_argument("--lr-gamma", default=0.1, type=float, help="decrease lr by a factor of lr-gamma")
-    #parser.add_argument("--lr-min", default=0.0, type=float, help="minimum lr of lr schedule (default: 0.0)")
     #parser.add_argument("--print-freq", default=10, type=int, help="print frequency")
     parser.add_argument("--tb-dir", default="tb-output", type=str, help="tensorboard path to save logs")
     parser.add_argument("--run-dir", default="runs", type=str, help="path to save saved models")
