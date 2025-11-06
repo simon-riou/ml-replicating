@@ -197,7 +197,7 @@ def train(args):
 
     writer = SummaryWriter(log_dir=args.tb_dir)
     
-    model = models.AlexNet.AlexNet(3, 10)
+    model = models.ViT.ViT(3, 7, 12, 128, 16, 10)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
     criterion = torch.nn.CrossEntropyLoss()
 
