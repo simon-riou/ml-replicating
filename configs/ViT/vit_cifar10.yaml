@@ -4,21 +4,24 @@ device: "cuda"
 num_workers: 8
 
 # Hyperparameters
-batch_size: 128
-epochs: 5
-clip_grad_norm: 1.0
+batch_size: 4096
+epochs: 90
 
 # Optimizer configuration
 optimizer:
-  type: "SGD"
-  lr: 0.03
-  momentum: 0.9
-  weight_decay: 0.0
+  type: "Adam"
+  betas: [0.9, 0.999]
+  lr: 0.001
+  weight_decay: 0.03
 
 # Criterion (loss function) configuration
 criterion:
   type: "CrossEntropyLoss"
   label_smoothing: 0.1
+
+# Learning rate scheduler configuration
+scheduler:
+  type: "LinearLR"
 
 # File save/logs settings
 run_dir: "runs/alexnet_cifar10_exp1"
