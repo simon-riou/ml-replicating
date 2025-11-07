@@ -49,16 +49,16 @@ def build_dataset(
     # For now, use basic transforms: ToTensor + Normalize
 
     if dataset_type == 'MNIST':
-        # MNIST: 28x28 grayscale images, 10 classes (digits 0-9)
         dataset = build_MNIST(root, is_train, download)
 
     elif dataset_type == 'CIFAR10':
-        # CIFAR10: 32x32 RGB images, 10 classes
         dataset = build_CIFAR10(root, is_train, download)
 
     elif dataset_type == 'CIFAR100':
-        # CIFAR100: 32x32 RGB images, 100 classes
         dataset = build_CIFAR100(root, is_train, download)
+
+    elif dataset_type == 'Food101':
+        dataset = build_Food101(root, is_train, download)
 
     elif dataset_type == 'ImageNet':
         dataset = build_ImageNet_HF(root, is_train)
