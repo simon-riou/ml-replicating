@@ -7,7 +7,7 @@ import argparse
 from torch.utils.data import Dataset
 from torchvision import datasets, transforms
 
-from datasets.builder.classification_data import *
+from data_loaders.builder.classification_data import *
 
 def build_dataset(
     config: Union[dict, argparse.Namespace],

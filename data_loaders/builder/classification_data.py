@@ -6,7 +6,7 @@ from torchvision import datasets, transforms
 from typing import Optional
 import os
 from pathlib import Path
-from datasets import load_dataset
+from data_loaders import load_dataset
 from PIL import Image
 import torch
 

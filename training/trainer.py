@@ -24,7 +24,7 @@ from utils.metrics import *
 from utils.builders import build_optimizer, build_criterion, build_scheduler
 
 import models
-from datasets import build_dataset
+from data_loaders import build_dataset
 
 def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, writer, n_iter):
     model.train()
