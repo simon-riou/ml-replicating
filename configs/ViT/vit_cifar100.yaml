@@ -1,0 +1,37 @@
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Hyperparameters
+batch_size: 32
+epochs: 90
+
+# Dataset configuration
+dataset:
+  type: "CIFAR100"
+  root: "./data/cifar100" 
+  download: true
+
+# Optimizer configuration
+optimizer:
+  type: "Adam"
+  betas: [0.9, 0.999]
+  lr: 0.001
+  weight_decay: 0.03
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1
+
+# Learning rate scheduler configuration
+scheduler:
+  type: "LinearLR"
+  start_factor: 1
+  end_factor: 0.333333333333
+  total_iters: 10
+
+# File save/logs settings
+run_dir: "runs/alexnet_cifar10_exp1"
+tb_dir: "tb-output"
+max_keep: 2

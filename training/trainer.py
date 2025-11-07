@@ -14,7 +14,7 @@ import torchvision.transforms
 
 from torch import nn
 from torch.utils import data
-from torchvision import datasets, transforms
+from torchvision import datasets as tv_datasets
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.auto import tqdm
 
@@ -24,6 +24,7 @@ from utils.metrics import *
 from utils.builders import build_optimizer, build_criterion, build_scheduler
 
 import models
+from datasets import build_dataset
 
 def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, writer, n_iter):
     model.train()
@@ -157,43 +158,25 @@ def train(args):
     else:
         torch.backends.cudnn.benchmark = True
 
-    # ===================================================
-    # ===================================================
-    # TODO: Move the dataset definition elsewhere
-    train_transforms = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+    # Load datasets from config
+    train_dataset = build_dataset(args, split='train')
+    train_data_loader = data.DataLoader(
+        train_dataset,
+        batch_size=args.batch_size,
+        shuffle=True,
+        drop_last=True,
+        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
+        num_workers=args.num_workers
+    )
 
-    test_transforms = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
-
-    train_dataset = datasets.CIFAR10(root=args.data_path,
-                                     train=True, 
-                                     transform=train_transforms,
-                                     download=True)
-    train_data_loader = data.DataLoader(train_dataset, 
-                                        batch_size=args.batch_size, 
-                                        shuffle=True,
-                                        drop_last=True,
-                                        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
-                                        num_workers=args.num_workers)
-
-    test_dataset = datasets.CIFAR10(root=args.data_path,
-                                     train=False, 
-                                     transform=test_transforms, 
-                                     download=True)
-    test_data_loader = data.DataLoader(test_dataset, 
-                                        batch_size=args.batch_size, 
-                                        shuffle=False,
-                                        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
-                                        num_workers=args.num_workers)
-    # ===================================================
-    # ===================================================
+    test_dataset = build_dataset(args, split='test')
+    test_data_loader = data.DataLoader(
+        test_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        worker_init_fn=worker_init_fn if worker_init_fn is not None else None,
+        num_workers=args.num_workers
+    )
     
 
     writer = SummaryWriter(log_dir=args.tb_dir)
@@ -209,7 +192,7 @@ def train(args):
         nb_blocks=12,
         embed_dim=128, # 768
         num_heads=16, # 12
-        out_classes=10
+        out_classes=100
     )
     # ===================================================
     # ===================================================

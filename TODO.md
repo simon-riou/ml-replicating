@@ -1,9 +1,5 @@
 # TODO
 
-- [ ] Fichier `dataset` : loader depuis la config
-    - Définir interface de config (chemin, transforms, split, seed)
-    - Implémenter `from_config(config)` + tests unitaires
-
 - [ ] Fichier `presets` : implémentation comme décrit dans `training/TODO.md`
     - Traduire les presets en objets/ dicts réutilisables
     - Charger/valider les presets depuis fichier YAML ou JSON

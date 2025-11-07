@@ -1,7 +1,12 @@
 # Config specific
-data_path: "./data/cifar10"
 device: "cuda"
 num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10" 
+  download: true
 
 # Hyperparameters
 batch_size: 128

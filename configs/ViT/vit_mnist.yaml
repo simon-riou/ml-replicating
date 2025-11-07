@@ -1,8 +1,13 @@
 
 # Config specific
-data_path: "./data/mnist"
 device: "cuda"
 num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "MNIST"
+  root: "./data/mnist"
+  download: true
 
 # Hyperparameters
 batch_size: 128

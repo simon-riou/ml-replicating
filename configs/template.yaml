@@ -1,7 +1,17 @@
 # Config specific
-data_path: "./data/cifar10" # <-- path to dataset or to loc to download   (default: data/)
 device: "cuda"              # <-- device                                  (default: cuda)
-num_workers: 8              # <-- number of process for the dataloader    (default: 2) 
+num_workers: 8              # <-- number of process for the dataloader    (default: 2)
+
+# Dataset configuration
+dataset:                    #                                             (default: Only available in config file not in CLI)
+  type: "MNIST"             # Dataset type: "MNIST", "CIFAR10" (TODO), "CIFAR100" (TODO), "ImageFolder" (TODO)
+  root: "./data/mnist"      # Root directory for dataset storage
+  download: true            # Whether to download the dataset if not present
+  # TODO: Add transform configuration in future
+  # train_transforms:
+  #   preset: "classification_train"
+  # test_transforms:
+  #   preset: "classification_test" 
 
 # Hyperparameters
 batch_size: 4096            #                                             (default: 32)
