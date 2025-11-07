@@ -6,11 +6,11 @@ This module provides builders for various types of datasets:
 - diffusion_data: For diffusion models (TODO: future implementation)
 """
 
-from . import datasets
-from .datasets import build_dataset
+from . import datasets_builder
+from .datasets_builder import build_dataset
 
 
 __all__ = [
-    'datasets',
+    'datasets_builder',
     'build_dataset',
 ]
