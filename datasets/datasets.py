@@ -60,6 +60,9 @@ def build_dataset(
         # CIFAR100: 32x32 RGB images, 100 classes
         dataset = build_CIFAR100(root, is_train, download)
 
+    elif dataset_type == 'ImageNet':
+        dataset = build_ImageNet_HF(root, is_train)
+
     # TODO: Add more datasets
 
     else:

@@ -199,13 +199,13 @@ def train(args):
     # ===================================================
     # TODO: Let the config choose
     model = models.ViT.ViT(
-        img_size=28,
-        in_channels=1,
-        patch_size=7,
-        nb_blocks=12,
-        embed_dim=128, # 768
-        num_heads=16, # 12
-        out_classes=10
+        img_size=224,
+        in_channels=3,
+        patch_size=16,
+        nb_blocks=11,
+        embed_dim=768, # 768
+        num_heads=12, # 12
+        out_classes=1000
     )
     # ===================================================
     # ===================================================
