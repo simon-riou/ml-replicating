@@ -4,10 +4,6 @@
     - Traduire les presets en objets/ dicts réutilisables
     - Charger/valider les presets depuis fichier YAML ou JSON
 
-- [ ] Modifier la sauvegarde des modèles
-    - Normaliser format de checkpoint (state_dict, epoch, opt_state, metrics)
-    - Ajouter rotation/retention (keep N latest)
-
 - [ ] Fichiers pour loader un modèle depuis la config avec ces params
     - `model.from_config(config)` : architecture, pretrained, device, checkpoint_path
     - Gestion des dépendances / versions des poids

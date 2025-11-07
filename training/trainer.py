@@ -76,7 +76,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
     return n_iter
 
 
-def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None, epoch=0, n_iter=0, log_suffix=""):
+def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None, epoch=0, n_iter=0, log_suffix="", best_acc1=0.0):
     model.eval()
 
     total_loss = 0.0
@@ -110,11 +110,14 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
     avg_acc5 = correct_5 / total_samples * 100.0
 
     print(f"{header} Acc@1 {avg_acc1:.3f} Acc@5 {avg_acc5:.3f} Loss {avg_loss:.4f}")
-    
+
     # udpate tensorboardX
     if writer:
         writer.add_scalar(f'eval/loss{log_suffix}', avg_loss, epoch)
         writer.add_scalar(f'eval/acc1{log_suffix}', avg_acc1, epoch)
+
+    # Determine if this is the best model
+    is_best = avg_acc1 > best_acc1
 
     if not args.no_save:
         # save checkpoint if needed
@@ -125,8 +128,18 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
             'optim': optimizer.state_dict()
         }
 
+        # Prepare metrics dictionary for logging
+        metrics = {
+            'loss': avg_loss,
+            'acc1': avg_acc1,
+            'acc5': avg_acc5,
+            'lr': optimizer.param_groups[0]['lr'],
+            'epoch': epoch,
+            'n_iter': n_iter
+        }
+
         save_path = args.run_dir / f"model_ckpt_epoch_{epoch}_iter_{n_iter}.ckpt"
-        save_checkpoint(cpkt, save_path, is_best=False, max_keep=args.max_keep)
+        save_checkpoint(cpkt, save_path, is_best=is_best, max_keep=args.max_keep, metrics=metrics)
 
     return avg_acc1
 
@@ -187,12 +200,12 @@ def train(args):
     # TODO: Let the config choose
     model = models.ViT.ViT(
         img_size=28,
-        in_channels=3,
+        in_channels=1,
         patch_size=7,
         nb_blocks=12,
         embed_dim=128, # 768
         num_heads=16, # 12
-        out_classes=100
+        out_classes=10
     )
     # ===================================================
     # ===================================================
@@ -215,7 +228,7 @@ def train(args):
 
     # Create the folder to save models
     if not args.no_save and start_epoch < args.epochs:
-        timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%Hh%Mm%Ss")
+        timestamp = datetime.now().strftime("%Y_%m_%d-%Hh%Mm%Ss")
         args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
         os.makedirs(args.run_dir, exist_ok=True)
 
@@ -226,12 +239,18 @@ def train(args):
         print(' [!] Model trained on max epoch already ! Update the --epochs argument to increase the number of epochs.')
 
     n_iter = start_n_iter # Global iterator
+    best_acc1 = 0.0  # Track best top-1 accuracy
+
     for epoch in range(start_epoch, args.epochs):
         # Training
         n_iter = train_one_epoch(model, criterion, optimizer, train_data_loader, device, epoch+1, args, writer, n_iter)
-        
+
         # Evaluating
-        evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter)
+        current_acc1 = evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter, best_acc1=best_acc1)
+
+        # Update best accuracy
+        if current_acc1 > best_acc1:
+            best_acc1 = current_acc1
 
         if lr_scheduler is not None:
             lr_scheduler.step()
