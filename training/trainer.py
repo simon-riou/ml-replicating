@@ -27,18 +27,24 @@ from data_loaders import build_dataset
 
 def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, writer, n_iter):
     model.train()
-    
-    pbar = tqdm(enumerate(data_loader), total=len(data_loader), desc=f"Epoch {epoch} [Train]")
+
+    pbar = tqdm(enumerate(data_loader), total=len(data_loader), desc=f"Epoch {epoch}/{args.epochs} [Train]")
+
+    # Initialize cumulative metrics
+    total_loss = 0.0
+    total_correct_1 = 0.0
+    total_correct_5 = 0.0
+    total_samples = 0
 
     start_time = time.time()
 
     for i, (image, target) in pbar:
         # data preparation
         image, target = image.to(device), target.to(device)
-        
+
         # Compute preparation time to find any issues in dataloader
         prepare_time = time.time() - start_time
-        
+
         # forward and backward pass
         output = model(image)
         loss = criterion(output, target)
@@ -48,30 +54,42 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
 
         if args.clip_grad_norm is not None:
             nn.utils.clip_grad_norm_(model.parameters(), args.clip_grad_norm)
-            
+
         optimizer.step()
-        
+
         # Compute metrics
         acc1, acc5 = utils.metrics.accuracy(output, target, topk=(1, 5))
 
-        # Update progress bar
-        pbar.set_postfix(loss=f'{loss.item():.4f}', acc1=f'{acc1.item():.2f}%', lr=f'{optimizer.param_groups[0]["lr"]:.6f}')
+        # Update cumulative metrics
+        batch_size = image.shape[0]
+        total_loss += loss.item() * batch_size
+        total_correct_1 += acc1.item() * batch_size / 100.0
+        total_correct_5 += acc5.item() * batch_size / 100.0
+        total_samples += batch_size
 
         # udpate tensorboardX
         writer.add_scalar('train/loss', loss.item(), n_iter)
         writer.add_scalar('train/acc1', acc1.item(), n_iter)
+        writer.add_scalar('train/acc5', acc5.item(), n_iter)
         writer.add_scalar('train/lr', optimizer.param_groups[0]["lr"], n_iter)
-        
+
         # compute computation time and *compute_efficiency*
         process_time = time.time() - start_time - prepare_time
         compute_efficiency = process_time/(process_time+prepare_time)
-        pbar.set_description(
-            f'Compute efficiency: {compute_efficiency:.2f}, ' 
-            f'loss: {loss.item():.2f},  epoch: {epoch}/{args.epochs}')
+
+        # Update progress bar with cumulative averages
+        pbar.set_postfix({
+            'loss': f'{total_loss/total_samples:.4f}',
+            'acc@1': f'{total_correct_1/total_samples*100:.2f}%',
+            'acc@5': f'{total_correct_5/total_samples*100:.2f}%',
+            'lr': f'{optimizer.param_groups[0]["lr"]:.2e}',
+            'eff': f'{compute_efficiency:.2%}'
+        })
+
         start_time = time.time()
 
         n_iter += 1
-    
+
     return n_iter
 
 
@@ -83,7 +101,7 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
     correct_5 = 0
     total_samples = 0
 
-    header = f"Test: {log_suffix}"
+    header = f"Epoch {epoch}/{args.epochs} [Val{log_suffix}]"
     pbar = tqdm(data_loader, desc=header)
 
     with torch.no_grad():
@@ -91,24 +109,29 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
             # data preparation
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
-            
+
             output = model(image)
             loss = criterion(output, target)
-            
+
             # Compute metrics
             acc1, acc5 = utils.metrics.accuracy(output, target, topk=(1, 5))
-        
+
             batch_size = image.shape[0]
             total_loss += loss.item() * batch_size
             correct_1 += acc1.item() * batch_size / 100.0
             correct_5 += acc5.item() * batch_size / 100.0
             total_samples += batch_size
 
+            # Update progress bar with current averages
+            pbar.set_postfix({
+                'loss': f'{total_loss/total_samples:.4f}',
+                'acc@1': f'{correct_1/total_samples*100:.2f}%',
+                'acc@5': f'{correct_5/total_samples*100:.2f}%'
+            })
+
     avg_loss = total_loss / total_samples
     avg_acc1 = correct_1 / total_samples * 100.0
     avg_acc5 = correct_5 / total_samples * 100.0
-
-    print(f"{header} Acc@1 {avg_acc1:.3f} Acc@5 {avg_acc5:.3f} Loss {avg_loss:.4f}")
 
     # udpate tensorboardX
     if writer:
