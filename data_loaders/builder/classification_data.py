@@ -126,8 +126,7 @@ def build_ImageNet_HF(
             hf_dataset_name,
             split=split,
             cache_dir=str(cache_dir),
-            streaming=streaming,
-            trust_remote_code=True
+            streaming=streaming
         )
     except Exception as e:
         if "authentication" in str(e).lower() or "gated" in str(e).lower():
