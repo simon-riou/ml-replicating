@@ -32,6 +32,6 @@ scheduler:
   total_iters: 10
 
 # File save/logs settings
-run_dir: "runs/alexnet_cifar10_exp1"
+run_dir: "runs/vit_cifar10_exp1"
 tb_dir: "tb-output"
 max_keep: 2

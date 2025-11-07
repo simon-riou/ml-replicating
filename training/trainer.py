@@ -215,7 +215,7 @@ def train(args):
 
     # Create the folder to save models
     if not args.no_save and start_epoch < args.epochs:
-        timestamp = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        timestamp = datetime.datetime.now().strftime("%Y_%m_%d-%Hh%Mm%Ss")
         args.run_dir = Path(args.run_dir, f"{model.__class__.__name__}_{timestamp}" )
         os.makedirs(args.run_dir, exist_ok=True)
 
