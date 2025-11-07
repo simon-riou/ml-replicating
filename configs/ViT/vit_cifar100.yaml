@@ -9,8 +9,19 @@ epochs: 90
 # Dataset configuration
 dataset:
   type: "CIFAR100"
-  root: "./data/cifar100" 
+  root: "./data/cifar100"
   download: true
+
+# Model configuration
+model:
+  type: "ViT"
+  img_size: 32
+  in_channels: 3
+  patch_size: 4
+  nb_blocks: 8
+  embed_dim: 512
+  num_heads: 8
+  out_classes: 100
 
 # Optimizer configuration
 optimizer:

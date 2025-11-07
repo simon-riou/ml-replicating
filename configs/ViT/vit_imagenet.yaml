@@ -9,7 +9,18 @@ epochs: 90
 # Dataset configuration
 dataset:
   type: "ImageNet"
-  root: "./data/ImageNet" 
+  root: "./data/ImageNet"
+
+# Model configuration
+model:
+  type: "ViT"
+  img_size: 224
+  in_channels: 3
+  patch_size: 16
+  nb_blocks: 11
+  embed_dim: 768
+  num_heads: 12
+  out_classes: 1000
 
 # Optimizer configuration
 optimizer:

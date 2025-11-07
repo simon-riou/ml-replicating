@@ -21,9 +21,7 @@ from tqdm.auto import tqdm
 import utils
 from utils.checkpoints import *
 from utils.metrics import *
-from utils.builders import build_optimizer, build_criterion, build_scheduler
-
-import models
+from utils.builders import build_model, build_optimizer, build_criterion, build_scheduler
 from data_loaders import build_dataset
 
 def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, writer, n_iter):
@@ -191,25 +189,12 @@ def train(args):
         num_workers=args.num_workers
     )
     
-
     writer = SummaryWriter(log_dir=args.tb_dir)
     
-
-    # ===================================================
-    # ===================================================
-    # TODO: Let the config choose
-    model = models.ViT.ViT(
-        img_size=224,
-        in_channels=3,
-        patch_size=16,
-        nb_blocks=11,
-        embed_dim=768, # 768
-        num_heads=12, # 12
-        out_classes=1000
-    )
-    # ===================================================
-    # ===================================================
+    # Build model from config
+    model = build_model(args)
     
+    # Build opti, crit and scheduler from config
     optimizer = build_optimizer(args, model.parameters())
     criterion = build_criterion(args)
     lr_scheduler = build_scheduler(args, optimizer)

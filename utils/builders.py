@@ -1,10 +1,56 @@
 """
-Builders for creating optimizer and criterion from configuration.
+Builders for creating model, optimizer, criterion and scheduler from configuration.
 """
 
 import torch
 import torch.nn as nn
 from typing import Dict, Any, Iterator
+
+
+def build_model(config: Any) -> nn.Module:
+    """
+    Build model from configuration.
+
+    Args:
+        config: Configuration object with model settings
+
+    Returns:
+        nn.Module: Configured model
+
+    Raises:
+        ValueError: If model type is not specified or not supported
+    """
+    if not hasattr(config, 'model'):
+        raise ValueError("Configuration must contain 'model' section")
+
+    model_config = config.model
+
+    # Get model type and params
+    if isinstance(model_config, dict):
+        model_type = model_config.get('type')
+        if model_type is None:
+            raise ValueError("Model type must be specified in config")
+        # Remove 'type' from params to pass to model constructor
+        model_params = {k: v for k, v in model_config.items() if k != 'type'}
+    else:
+        if not hasattr(model_config, 'type'):
+            raise ValueError("Model type must be specified in config")
+        model_type = model_config.type
+        model_params = {k: v for k, v in vars(model_config).items() if k != 'type'}
+
+    # Build model based on type
+    if model_type == 'ViT':
+        from models.ViT import ViT
+        return ViT(**model_params)
+    elif model_type == 'AlexNet':
+        from models.AlexNet import AlexNet
+        return AlexNet(**model_params)
+    elif model_type == 'MLP':
+        from models.MLP import MLP
+        return MLP(**model_params)
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}. "
+                         f"Supported types: ViT, AlexNet, MLP")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:

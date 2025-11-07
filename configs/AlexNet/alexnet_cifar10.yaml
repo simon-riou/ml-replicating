@@ -5,8 +5,14 @@ num_workers: 8
 # Dataset configuration
 dataset:
   type: "CIFAR10"
-  root: "./data/cifar10" 
+  root: "./data/cifar10"
   download: true
+
+# Model configuration
+model:
+  type: "AlexNet"
+  in_channel: 3
+  out_channel: 10
 
 # Hyperparameters
 batch_size: 128
