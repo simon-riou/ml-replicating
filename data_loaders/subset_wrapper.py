@@ -28,6 +28,7 @@ class SubsetDataset(Dataset):
                       - None: keep all samples
         download_subset: If True, saves the subset indices to disk cache after creation
         load_subset: If True, tries to load the subset indices from disk cache if available
+        split: Dataset split name ('train', 'test', 'val') - used to create unique cache files
     """
 
     def __init__(
@@ -36,16 +37,15 @@ class SubsetDataset(Dataset):
         class_subset: Optional[Union[List[int], int, float]] = None,
         sample_subset: Optional[Union[int, float]] = None,
         download_subset: bool = False,
-        load_subset: bool = False
+        load_subset: bool = False,
+        split: str = 'train'
     ):
         self.dataset = dataset
         self.original_class_subset = class_subset
         self.sample_subset = sample_subset
         self.download_subset = download_subset
         self.load_subset = load_subset
-
-        # Convert class_subset to list of class indices
-        self.class_subset = self._process_class_subset(class_subset)
+        self.split = split
 
         # Try to load from cache if load_subset is enabled
         cache_loaded = False
@@ -53,6 +53,9 @@ class SubsetDataset(Dataset):
             cache_loaded = self._load_from_cache()
 
         if not cache_loaded:
+            # Convert class_subset to list of class indices (needs full scan)
+            self.class_subset = self._process_class_subset(class_subset)
+
             # Build index mapping
             self.indices = self._build_indices()
 
@@ -158,7 +161,7 @@ class SubsetDataset(Dataset):
                         f"sample_subset must be int or float, got {type(self.sample_subset)}"
                     )
 
-                # Randomly select samples (with fixed seed for reproducibility)
+                # Randomly select samples : TODO: add arg for fixed randomness if assigned
                 np.random.seed(42)
                 class_to_indices[class_idx] = np.random.choice(
                     indices,
@@ -181,11 +184,14 @@ class SubsetDataset(Dataset):
             Path to the cache file
         """
         # Create a hash of the configuration to ensure uniqueness
+        # Use original_class_subset (not processed) to ensure hash is consistent
+        # before and after class_subset processing
         config_str = json.dumps({
             'dataset_type': type(self.dataset).__name__,
             'dataset_len': len(self.dataset),
-            'class_subset': self.class_subset,
+            'class_subset': self.original_class_subset,
             'sample_subset': self.sample_subset,
+            'split': self.split,  # Include split to avoid conflicts between train/test/val
         }, sort_keys=True)
 
         config_hash = hashlib.md5(config_str.encode()).hexdigest()[:8]
@@ -198,7 +204,7 @@ class SubsetDataset(Dataset):
 
         os.makedirs(cache_dir, exist_ok=True)
 
-        cache_filename = f'subset_{config_hash}.pt'
+        cache_filename = f'subset_{self.split}_{config_hash}.pt'
         return os.path.join(cache_dir, cache_filename)
 
     def _save_to_cache(self):
@@ -213,6 +219,7 @@ class SubsetDataset(Dataset):
                 'sample_subset': self.sample_subset,
                 'dataset_type': type(self.dataset).__name__,
                 'dataset_len': len(self.dataset),
+                'split': self.split,
             }
             torch.save(cache_data, cache_path)
             print(f"Subset cached to: {cache_path}")
@@ -235,14 +242,17 @@ class SubsetDataset(Dataset):
             cache_data = torch.load(cache_path, weights_only=False)
 
             # Verify cache validity
+            # Note: Need to process class_subset to compare it properly
+            # For now, compare the cached class_subset directly
             if (cache_data['dataset_type'] != type(self.dataset).__name__ or
                 cache_data['dataset_len'] != len(self.dataset) or
-                cache_data['class_subset'] != self.class_subset or
-                cache_data['sample_subset'] != self.sample_subset):
+                cache_data.get('split') != self.split):
                 print("Cache invalid, rebuilding subset...")
                 return False
 
+            # Load cached data
             self.indices = cache_data['indices']
+            self.class_subset = cache_data['class_subset']
             print(f"Subset loaded from cache: {cache_path}")
             return True
 

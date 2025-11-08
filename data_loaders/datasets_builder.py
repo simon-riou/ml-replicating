@@ -101,7 +101,8 @@ def build_dataset(
             class_subset=class_subset,
             sample_subset=sample_subset,
             download_subset=download_subset,
-            load_subset=load_subset
+            load_subset=load_subset,
+            split=split
         )
 
         # Print subset information
