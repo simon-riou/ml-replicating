@@ -114,7 +114,7 @@ FOOD101_BASIC: List[Dict[str, Any]] = [
 ]
 
 FOOD101_AUGMENTED: List[Dict[str, Any]] = [
-    {'type': 'RandomResizedCrop', 'height': 512, 'width': 512, 'scale': (0.8, 1.0)},
+    {'type': 'RandomResizedCrop', 'scale': (512, 512), 'scale': (0.8, 1.0)},
     {'type': 'HorizontalFlip', 'p': 0.5},
     {'type': 'Rotate', 'limit': 15, 'p': 0.5},
     {'type': 'ColorJitter', 'brightness': 0.2, 'contrast': 0.2, 'saturation': 0.2, 'hue': 0.1, 'p': 0.5},
