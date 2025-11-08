@@ -140,32 +140,109 @@ def build_scheduler(config: Any, optimizer: torch.optim.Optimizer):
     """
     Build learning rate scheduler from configuration.
 
+    Supports both single scheduler and SequentialLR with multiple schedulers.
+    When using scheduler_list, creates a SequentialLR that chains multiple schedulers.
+
     Args:
         config: Configuration object with scheduler settings
+        optimizer: The optimizer to schedule
 
     Returns:
-        nn.optim.lr_scheduler: Configured scheduler
+        torch.optim.lr_scheduler: Configured scheduler or None
 
     Raises:
         ValueError: If scheduler type is not supported
     """
-    if hasattr(config, 'scheduler'):
+    # Check for scheduler_list (for SequentialLR)
+    if hasattr(config, 'scheduler_list'):
+        scheduler_configs = config.scheduler_list
+
+        if scheduler_configs is None or len(scheduler_configs) == 0:
+            return None
+
+        # Build individual schedulers
+        schedulers = []
+        milestones = []
+        cumulative_iters = 0
+
+        for sched_config in scheduler_configs:
+            # Get scheduler type and params
+            if isinstance(sched_config, dict):
+                sched_type = sched_config.get('type')
+                if sched_type is None:
+                    raise ValueError("Scheduler type must be specified in scheduler_list")
+                sched_params = {k: v for k, v in sched_config.items() if k != 'type'}
+            else:
+                sched_type = sched_config.type if hasattr(sched_config, 'type') else None
+                if sched_type is None:
+                    raise ValueError("Scheduler type must be specified in scheduler_list")
+                sched_params = {k: v for k, v in vars(sched_config).items() if k != 'type'}
+
+            # Build individual scheduler
+            scheduler = _build_single_scheduler(sched_type, optimizer, sched_params)
+            schedulers.append(scheduler)
+
+        # Check if custom milestones provided in config
+        if not hasattr(config, 'milestones'):
+            raise ValueError("Milestones list must be specified in scheduler_list")
+        milestones = config.milestones
+
+        # Return SequentialLR if multiple schedulers, otherwise return single scheduler
+        if len(schedulers) > 1:
+            return torch.optim.lr_scheduler.SequentialLR(
+                optimizer,
+                schedulers=schedulers,
+                milestones=milestones
+            )
+        else:
+            return schedulers[0] if schedulers else None
+
+    # Legacy support: single scheduler config
+    elif hasattr(config, 'scheduler'):
         sched_config = config.scheduler
-    else:
-        return None
-    
-     # Get scheduler type and params
-    if isinstance(sched_config, dict):
-        sched_type = sched_config.get('type', 'LinearLR')
-        # Remove 'type' from params to pass to criterion
-        crit_params = {k: v for k, v in sched_config.items() if k != 'type'}
-    else:
-        sched_type = sched_config.type if hasattr(sched_config, 'type') else 'LinearLR'
-        crit_params = {k: v for k, v in vars(sched_config).items() if k != 'type'}
-    
+
+        # Get scheduler type and params
+        if isinstance(sched_config, dict):
+            sched_type = sched_config.get('type', 'LinearLR')
+            sched_params = {k: v for k, v in sched_config.items() if k != 'type'}
+        else:
+            sched_type = sched_config.type if hasattr(sched_config, 'type') else 'LinearLR'
+            sched_params = {k: v for k, v in vars(sched_config).items() if k != 'type'}
+
+        return _build_single_scheduler(sched_type, optimizer, sched_params)
+
+    return None
+
+
+def _build_single_scheduler(sched_type: str, optimizer: torch.optim.Optimizer, sched_params: Dict[str, Any]):
+    """
+    Build a single learning rate scheduler.
+
+    Args:
+        sched_type: Type of scheduler (e.g., 'LinearLR', 'CosineAnnealingLR')
+        optimizer: The optimizer to schedule
+        sched_params: Parameters for the scheduler
+
+    Returns:
+        torch.optim.lr_scheduler: Configured scheduler
+
+    Raises:
+        ValueError: If scheduler type is not supported
+    """
     # Build scheduler based on type
     if sched_type == 'LinearLR':
-        return torch.optim.lr_scheduler.LinearLR(optimizer, **crit_params)
+        return torch.optim.lr_scheduler.LinearLR(optimizer, **sched_params)
+    elif sched_type == 'CosineAnnealingLR':
+        return torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, **sched_params)
+    elif sched_type == 'StepLR':
+        return torch.optim.lr_scheduler.StepLR(optimizer, **sched_params)
+    elif sched_type == 'ExponentialLR':
+        return torch.optim.lr_scheduler.ExponentialLR(optimizer, **sched_params)
+    elif sched_type == 'CosineAnnealingWarmRestarts':
+        return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, **sched_params)
+    elif sched_type == 'MultiStepLR':
+        return torch.optim.lr_scheduler.MultiStepLR(optimizer, **sched_params)
     else:
         raise ValueError(f"Unsupported scheduler type: {sched_type}. "
-                         f"Supported types: LinearLR")
+                         f"Supported types: LinearLR, CosineAnnealingLR, StepLR, "
+                         f"ExponentialLR, CosineAnnealingWarmRestarts, MultiStepLR")

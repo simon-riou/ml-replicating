@@ -35,6 +35,16 @@ criterion:
   type: "CrossEntropyLoss"
   label_smoothing: 0.1
 
+# Learning rate scheduler configuration
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+    total_iters: 5
+  - type: "CosineAnnealingLR"
+    T_max: 85
+    eta_min: 0.00001
+milestones: [5]
+
 # File save/logs settings
 run_dir: "runs/alexnet_cifar10_exp1"
 tb_dir: "tb-output"

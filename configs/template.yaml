@@ -45,8 +45,14 @@ criterion:                  # MANDATORY                                   (defau
   label_smoothing: 0.1      # ...
 
 # Learning rate scheduler configuration
-scheduler:                  #                                             (default: Only available in config file not in CLI)
-  type: "LinearLR"          # ...
+scheduler_list:               # List of schedulers to use with SequentialLR  (default: None)
+  - type: "LinearLR"          # First scheduler type
+    start_factor: 0.1         # Starting learning rate multiplier
+    total_iters: 5            # Number of epochs for this scheduler
+  - type: "CosineAnnealingLR" # Second scheduler type
+    T_max: 85                 # Maximum number of iterations for cosine annealing
+    eta_min: 0.00001          # Minimum learning rate
+milestones: [5]               # Epochs at which to switch schedulers
 
 # File save/logs settings
 run_dir: "runs/model"       # <-- path to save the model during training  (default: runs/)
