@@ -9,6 +9,7 @@ import torch
 import os
 import hashlib
 import json
+from tqdm import tqdm
 
 
 class SubsetDataset(Dataset):
@@ -85,7 +86,7 @@ class SubsetDataset(Dataset):
 
         # Get all unique classes in the dataset
         all_classes = set()
-        for idx in range(len(self.dataset)):
+        for idx in tqdm(range(len(self.dataset)), desc="Scanning dataset classes", leave=False):
             _, label = self.dataset[idx]
             all_classes.add(label)
         all_classes = sorted(list(all_classes))
@@ -126,7 +127,7 @@ class SubsetDataset(Dataset):
         # First, organize all indices by class
         class_to_indices = {}
 
-        for idx in range(len(self.dataset)):
+        for idx in tqdm(range(len(self.dataset)), desc="Building subset indices", leave=False):
             _, label = self.dataset[idx]
             if label not in class_to_indices:
                 class_to_indices[label] = []
