@@ -20,7 +20,7 @@ model:
 
 # Hyperparameters
 batch_size: 16
-epochs: 5
+epochs: 1
 clip_grad_norm: 1.0
 
 # Optimizer configuration

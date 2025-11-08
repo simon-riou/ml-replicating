@@ -7,6 +7,7 @@ dataset:                    # MANDATORY                                   (defau
   type: "MNIST"             # MANDATORY Dataset type: "MNIST", "CIFAR10" (TODO), "CIFAR100" (TODO), "ImageFolder" (TODO)
   root: "./data/mnist"      # Root directory for dataset storage
   download: true            # Whether to download the dataset if not present
+  
   class_subset: [0, 1, 2]   # List = Keep only class with indices x, y, z | Int = keep X classes | Float = keep x% of classes
   sample_subset: 50        # Int = keep X sample per classes | Float = keep x% of sample per calsses
   download_subset: false    # If true, saves the subset indices to disk cache after creation

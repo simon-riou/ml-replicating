@@ -25,6 +25,8 @@ from utils.metrics import *
 from utils.builders import build_model, build_optimizer, build_criterion, build_scheduler
 from data_loaders import build_dataset
 
+
+
 def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, args, writer, n_iter):
     model.train()
 
@@ -142,6 +144,11 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
     is_best = avg_acc1 > best_acc1
 
     if not args.no_save:
+        # Save config and args on first checkpoint save
+        config_file = args.run_dir / "config.json"
+        if not config_file.exists():
+            save_config_and_args(args, args.run_dir)
+
         # save checkpoint if needed
         cpkt = {
             'net': model.state_dict(),

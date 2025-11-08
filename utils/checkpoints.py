@@ -4,7 +4,36 @@ import numpy as np
 import torch
 from datetime import datetime
 from typing import Dict, Optional
+from pathlib import Path
+import json
 
+def save_config_and_args(args, save_dir):
+    """
+    Save the training configuration and arguments to a JSON file.
+
+    Args:
+        args: The argparse namespace containing all arguments
+        save_dir: Directory where to save the config file
+    """
+    config_path = Path(save_dir) / "config.json"
+
+    # Convert args to a dictionary, handling non-serializable types
+    config_dict = {}
+    for key, value in vars(args).items():
+        # Convert Path objects to strings
+        if isinstance(value, Path):
+            config_dict[key] = str(value)
+        # Skip non-serializable objects
+        elif isinstance(value, (str, int, float, bool, list, dict, type(None))):
+            config_dict[key] = value
+        else:
+            config_dict[key] = str(value)
+
+    # Save to JSON file
+    with open(config_path, 'w') as f:
+        json.dump(config_dict, f, indent=2)
+
+    print(f"Configuration saved to: {config_path}")
 
 def log_metrics(
     save_dir: str,
