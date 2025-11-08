@@ -10,51 +10,51 @@ from datasets import load_dataset
 from PIL import Image
 import torch
 
-def build_MNIST(root, is_train, download):
+def build_MNIST(config, split):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.1307,), std=(0.3081,))
     ])
 
     dataset = datasets.MNIST(
-        root=root,
-        train=is_train,
+        root=config.get('root', './data/mnist'),
+        train= split == 'train',
         transform=transform,
-        download=download
+        download=config.get('download', True)
     )
 
     return dataset
 
-def build_CIFAR10(root, is_train, download):
+def build_CIFAR10(config, split):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     dataset = datasets.CIFAR10(
-        root=root,
-        train=is_train,
+        root=config.get('root', './data/cifar10'),
+        train= split == 'train',
         transform=transform,
-        download=download
+        download=config.get('download', True)
     )
 
     return dataset
 
-def build_CIFAR100(root, is_train, download):
+def build_CIFAR100(config, split):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.1307,), std=(0.3081,))
     ])
 
     dataset = datasets.CIFAR100(
-        root=root,
-        train=is_train,
+        root=config.get('root', './data/cifar100'),
+        train= split == 'train',
         transform=transform,
-        download=download
+        download=config.get('download', True)
     )
 
     return dataset
 
-def build_Food101(root, is_train, download):
+def build_Food101(config, split):
     transform = transforms.Compose([
         transforms.Resize((512, 512)),
         transforms.ToTensor(),
@@ -62,19 +62,17 @@ def build_Food101(root, is_train, download):
     ])
 
     dataset = datasets.Food101(
-        root=root,
-        split="train" if is_train else "test",
+        root=config.get('root', './data/mnist'),
+        split=split,
         transform=transform,
-        download=download
+        download=config.get('download', True)
     )
 
     return dataset
 
 def build_ImageNet_HF(
-    root: str,
-    is_train: bool,
-    hf_dataset_name: str = "imagenet-1k",
-    streaming: bool = False,
+    config,
+    split,
     transform: Optional[transforms.Compose] = None
 ):
     """
@@ -103,7 +101,7 @@ def build_ImageNet_HF(
 
     # Default transforms
     if transform is None:
-        if is_train:
+        if split == 'train':
             transform = transforms.Compose([
                 transforms.RandomResizedCrop(224),
                 transforms.RandomHorizontalFlip(),
@@ -124,34 +122,34 @@ def build_ImageNet_HF(
                 )
             ])
 
-    split = "train" if is_train else "validation"
+    split = "train" if (split == 'train') else "validation"
 
-    cache_dir = Path(root) / "huggingface_cache"
+    cache_dir = Path(config.get('root', './data/imagenet')) / "huggingface_cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Loading ImageNet ({hf_dataset_name}) - split: {split}")
+    print(f"Loading ImageNet (imagenet-1k) - split: {split}")
     print(f"Cache directory: {cache_dir}")
 
-    if streaming:
+    if config.get('streaming', False):
         print("Using streaming mode (no download, loads on-the-fly)")
     else:
         print("Downloading dataset... This may take a while for ImageNet.")
 
     try:
         hf_dataset = load_dataset(
-            hf_dataset_name,
+            'imagenet-1k',
             split=split,
             cache_dir=str(cache_dir),
-            streaming=streaming
+            streaming=config.get('streaming', False)
         )
     except Exception as e:
         if "authentication" in str(e).lower() or "gated" in str(e).lower():
             raise ValueError(
-                f"Authentication required for {hf_dataset_name}. "
+                f"Authentication required for imagenet-1k. "
                 "Please follow these steps:\n"
                 "1. Create a Hugging Face account at https://huggingface.co/join\n"
-                f"2. Accept the dataset terms at https://huggingface.co/datasets/{hf_dataset_name}\n"
-                "3. Run: huggingface-cli login\n"
+                f"2. Accept the dataset terms at https://huggingface.co/datasets/imagenet-1k\n"
+                "3. Run: hf auth login\n"
                 "4. Enter your access token from https://huggingface.co/settings/tokens"
             )
         else:
@@ -162,7 +160,7 @@ def build_ImageNet_HF(
             self.hf_dataset = hf_dataset
             self.transform = transform
 
-            if streaming:
+            if config.get('streaming', False):
                 self._length = None
             else:
                 self._length = len(hf_dataset)
@@ -193,7 +191,7 @@ def build_ImageNet_HF(
     dataset = HFImageNetDataset(hf_dataset, transform)
 
     print(f"ImageNet dataset loaded successfully!")
-    if not streaming:
+    if not config.get('streaming', False):
         print(f"Dataset size: {len(dataset)} images")
 
     return dataset

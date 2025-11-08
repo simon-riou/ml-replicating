@@ -43,25 +43,23 @@ def build_dataset(
     root = dataset_config.get('root', './data')
     download = dataset_config.get('download', True)
 
-    is_train = (split == 'train')
-
     # TODO: Future - load transforms from config or presets
     # For now, use basic transforms: ToTensor + Normalize
 
     if dataset_type == 'MNIST':
-        dataset = build_MNIST(root, is_train, download)
+        dataset = build_MNIST(dataset_config, split)
 
     elif dataset_type == 'CIFAR10':
-        dataset = build_CIFAR10(root, is_train, download)
+        dataset = build_CIFAR10(dataset_config, split)
 
     elif dataset_type == 'CIFAR100':
-        dataset = build_CIFAR100(root, is_train, download)
+        dataset = build_CIFAR100(dataset_config, split)
 
     elif dataset_type == 'Food101':
-        dataset = build_Food101(root, is_train, download)
+        dataset = build_Food101(dataset_config, split)
 
     elif dataset_type == 'ImageNet':
-        dataset = build_ImageNet_HF(root, is_train)
+        dataset = build_ImageNet_HF(dataset_config, split)
 
     # TODO: Add more datasets
 
