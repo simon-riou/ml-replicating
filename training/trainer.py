@@ -93,7 +93,7 @@ def train_one_epoch(model, criterion, optimizer, data_loader, device, epoch, arg
     return n_iter
 
 
-def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None, epoch=0, n_iter=0, log_suffix="", best_acc1=0.0):
+def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None, epoch=0, n_iter=0, log_suffix="", best_acc1=0.0, lr_scheduler=None):
     model.eval()
 
     total_loss = 0.0
@@ -149,6 +149,10 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
             'n_iter': n_iter,
             'optim': optimizer.state_dict()
         }
+
+        # Save scheduler state if it exists
+        if lr_scheduler is not None:
+            cpkt['scheduler'] = lr_scheduler.state_dict()
 
         # Prepare metrics dictionary for logging
         metrics = {
@@ -233,6 +237,12 @@ def train(args):
         start_epoch = ckpt['epoch']
         start_n_iter = ckpt['n_iter']
         optimizer.load_state_dict(ckpt['optim'])
+
+        # Load scheduler state if it exists in checkpoint
+        if lr_scheduler is not None and 'scheduler' in ckpt:
+            lr_scheduler.load_state_dict(ckpt['scheduler'])
+            print("Scheduler state restored")
+
         print("last checkpoint restored\n")
 
     # Create the folder to save models
@@ -255,7 +265,7 @@ def train(args):
         n_iter = train_one_epoch(model, criterion, optimizer, train_data_loader, device, epoch+1, args, writer, n_iter)
 
         # Evaluating
-        current_acc1 = evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter, best_acc1=best_acc1)
+        current_acc1 = evaluate(model, criterion, optimizer, test_data_loader, device, args, writer, epoch+1, n_iter, best_acc1=best_acc1, lr_scheduler=lr_scheduler)
 
         # Update best accuracy
         if current_acc1 > best_acc1:
