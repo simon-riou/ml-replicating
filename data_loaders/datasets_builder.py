@@ -107,6 +107,7 @@ def build_dataset(
     load_subset = dataset_config.get('load_subset', False)
 
     if class_subset is not None or sample_subset is not None:
+        print("[*] Creating subset of the dataset")
         dataset = SubsetDataset(
             dataset=dataset,
             class_subset=class_subset,
