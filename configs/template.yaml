@@ -11,11 +11,47 @@ dataset:                    # MANDATORY                                   (defau
   sample_subset: 50        # Int = keep X sample per classes | Float = keep x% of sample per calsses
   download_subset: false    # If true, saves the subset indices to disk cache after creation
   load_subset: false        # If true, loads the subset from disk cache if available (faster)
-  # TODO: Add transform configuration in future
+
+  # Transform configuration (using Albumentations)
+  # Three formats supported:
+
+  # Format 1: Simple preset (recommended for most cases)
+  # train_transforms: "cifar10_augmented"
+  # test_transforms: "cifar10_basic"
+
+  # Format 2: Preset with overrides
   # train_transforms:
-  #   preset: "classification_train"
-  # test_transforms:
-  #   preset: "classification_test"
+  #   preset: "cifar10_augmented"
+  #   override:
+  #     normalize:
+  #       mean: [0.4914, 0.4822, 0.4465]
+  #       std: [0.2470, 0.2435, 0.2616]
+  #   additional:
+  #     - type: "RandomErasing"
+  #       p: 0.2
+
+  # Format 3: Full custom list
+  # train_transforms:
+  #   - type: "RandomCrop"
+  #     height: 32
+  #     width: 32
+  #     padding: 4
+  #   - type: "HorizontalFlip"
+  #     p: 0.5
+  #   - type: "Normalize"
+  #     mean: [0.5, 0.5, 0.5]
+  #     std: [0.5, 0.5, 0.5]
+  #     max_pixel_value: 255.0
+  #   - type: "ToTensorV2"
+
+  # Available presets:
+  # - mnist_basic, mnist_augmented
+  # - cifar_basic, cifar_augmented (generic CIFAR)
+  # - cifar10_basic, cifar10_augmented (CIFAR-10 specific stats)
+  # - cifar100_basic, cifar100_augmented (CIFAR-100 specific stats)
+  # - imagenet_basic, imagenet_augmented (or imagenet_train/imagenet_test)
+  # - food101_basic, food101_augmented
+  # - generic_basic, generic_augmented
 
 # Model configuration
 model:                      # MANDATORY                                    (default: Only available in config file not in CLI)

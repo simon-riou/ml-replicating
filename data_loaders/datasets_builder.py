@@ -9,6 +9,7 @@ from torchvision import datasets, transforms
 
 from data_loaders.builders.classification_data import *
 from data_loaders.subset_wrapper import SubsetDataset
+from data_loaders.builders.transforms_builder import build_transforms
 
 
 def _get_config_value(config, key, default=None):
@@ -61,30 +62,40 @@ def build_dataset(
 
     dataset_type = dataset_config.get('type', 'MNIST')
 
-    # TODO: Future - load transforms from config or presets
-    # For now, use basic transforms: ToTensor + Normalize
+    # Build transforms from config
+    # Support both split-specific keys (train_transforms/test_transforms)
+    # and generic 'transforms' key
+    transform_key = f'{split}_transforms' if split in ['train', 'test'] else 'transforms'
+    transforms_config = dataset_config.get(transform_key, None)
+
+    # Fallback to generic 'transforms' if split-specific not found
+    if transforms_config is None and split in ['train', 'test']:
+        transforms_config = dataset_config.get('transforms', None)
+
+    # Build the transform pipeline (returns None if no config provided)
+    transform = build_transforms(transforms_config, split=split)
 
     if dataset_type == 'MNIST':
-        dataset = build_MNIST(dataset_config, split)
+        dataset = build_MNIST(dataset_config, split, transform=transform)
 
     elif dataset_type == 'CIFAR10':
-        dataset = build_CIFAR10(dataset_config, split)
+        dataset = build_CIFAR10(dataset_config, split, transform=transform)
 
     elif dataset_type == 'CIFAR100':
-        dataset = build_CIFAR100(dataset_config, split)
+        dataset = build_CIFAR100(dataset_config, split, transform=transform)
 
     elif dataset_type == 'Food101':
-        dataset = build_Food101(dataset_config, split)
+        dataset = build_Food101(dataset_config, split, transform=transform)
 
     elif dataset_type == 'ImageNet':
-        dataset = build_ImageNet_HF(dataset_config, split)
+        dataset = build_ImageNet_HF(dataset_config, split, transform=transform)
 
     # TODO: Add more datasets
 
     else:
         raise ValueError(
             f"Unsupported dataset type: '{dataset_type}'. "
-            f"Currently supported: ['MNIST']. "
+            f"Currently supported: ['MNIST', 'CIFAR10', 'CIFAR100', 'Food101', 'ImageNet']. "
             f"To add more datasets, extend the build_dataset() function in "
             f"datasets/classification_data.py"
         )

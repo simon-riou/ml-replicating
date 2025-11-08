@@ -8,3 +8,4 @@ PyYAML
 datasets
 huggingface_hub
 pillow
+albumentations

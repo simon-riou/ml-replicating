@@ -3,68 +3,217 @@ Classification dataset builder.
 """
 
 from torchvision import datasets, transforms
-from typing import Optional
+from typing import Optional, Union
 import os
 from pathlib import Path
 from datasets import load_dataset
 from PIL import Image
 import torch
+import numpy as np
+import albumentations as A
 
-def build_MNIST(config, split):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.1307,), std=(0.3081,))
-    ])
+
+class AlbumentationsWrapper:
+    """
+    Wrapper to use Albumentations transforms with torchvision datasets.
+
+    Torchvision datasets return PIL images, but Albumentations expects numpy arrays.
+    This wrapper handles the conversion: PIL -> numpy -> Albumentations -> tensor.
+    """
+
+    def __init__(self, albumentations_transform: A.Compose):
+        """
+        Args:
+            albumentations_transform: Albumentations Compose object
+        """
+        self.transform = albumentations_transform
+
+    def __call__(self, image):
+        """
+        Apply Albumentations transform to a PIL image.
+
+        Args:
+            image: PIL Image
+
+        Returns:
+            Transformed image (tensor if ToTensorV2 is in pipeline)
+        """
+        # Convert PIL to numpy array (RGB format)
+        if isinstance(image, Image.Image):
+            image_np = np.array(image)
+        else:
+            image_np = image
+
+        # Apply Albumentations transform
+        # Albumentations expects dict with 'image' key
+        transformed = self.transform(image=image_np)
+
+        return transformed['image']
+
+
+def _create_default_torchvision_transform(dataset_type: str, split: str) -> transforms.Compose:
+    """
+    Create default torchvision transforms as fallback.
+
+    Args:
+        dataset_type: Type of dataset (e.g., 'MNIST', 'CIFAR10')
+        split: Dataset split ('train' or 'test')
+
+    Returns:
+        torchvision Compose transform
+    """
+    if dataset_type == 'MNIST':
+        return transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=(0.1307,), std=(0.3081,))
+        ])
+
+    elif dataset_type in ['CIFAR10', 'CIFAR100']:
+        return transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+
+    elif dataset_type == 'Food101':
+        return transforms.Compose([
+            transforms.Resize((512, 512)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+        ])
+
+    elif dataset_type == 'ImageNet':
+        if split == 'train':
+            return transforms.Compose([
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225]
+                )
+            ])
+        else:
+            return transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225]
+                )
+            ])
+
+    else:
+        # Generic default
+        return transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        ])
+
+
+def build_MNIST(config, split, transform: Optional[A.Compose] = None):
+    """
+    Build MNIST dataset with Albumentations support.
+
+    Args:
+        config: Dataset configuration
+        split: Dataset split ('train' or 'test')
+        transform: Optional Albumentations Compose. If None, uses default torchvision transforms.
+
+    Returns:
+        MNIST dataset
+    """
+    # Use Albumentations if provided, otherwise fallback to default torchvision
+    if transform is not None:
+        final_transform = AlbumentationsWrapper(transform)
+    else:
+        final_transform = _create_default_torchvision_transform('MNIST', split)
 
     dataset = datasets.MNIST(
         root=config.get('root', './data/mnist'),
         train= split == 'train',
-        transform=transform,
+        transform=final_transform,
         download=config.get('download', True)
     )
 
     return dataset
 
-def build_CIFAR10(config, split):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    ])
+def build_CIFAR10(config, split, transform: Optional[A.Compose] = None):
+    """
+    Build CIFAR-10 dataset with Albumentations support.
+
+    Args:
+        config: Dataset configuration
+        split: Dataset split ('train' or 'test')
+        transform: Optional Albumentations Compose. If None, uses default torchvision transforms.
+
+    Returns:
+        CIFAR-10 dataset
+    """
+    # Use Albumentations if provided, otherwise fallback to default torchvision
+    if transform is not None:
+        final_transform = AlbumentationsWrapper(transform)
+    else:
+        final_transform = _create_default_torchvision_transform('CIFAR10', split)
+
     dataset = datasets.CIFAR10(
         root=config.get('root', './data/cifar10'),
         train= split == 'train',
-        transform=transform,
+        transform=final_transform,
         download=config.get('download', True)
     )
 
     return dataset
 
-def build_CIFAR100(config, split):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean=(0.1307,), std=(0.3081,))
-    ])
+def build_CIFAR100(config, split, transform: Optional[A.Compose] = None):
+    """
+    Build CIFAR-100 dataset with Albumentations support.
+
+    Args:
+        config: Dataset configuration
+        split: Dataset split ('train' or 'test')
+        transform: Optional Albumentations Compose. If None, uses default torchvision transforms.
+
+    Returns:
+        CIFAR-100 dataset
+    """
+    # Use Albumentations if provided, otherwise fallback to default torchvision
+    if transform is not None:
+        final_transform = AlbumentationsWrapper(transform)
+    else:
+        final_transform = _create_default_torchvision_transform('CIFAR100', split)
 
     dataset = datasets.CIFAR100(
         root=config.get('root', './data/cifar100'),
         train= split == 'train',
-        transform=transform,
+        transform=final_transform,
         download=config.get('download', True)
     )
 
     return dataset
 
-def build_Food101(config, split):
-    transform = transforms.Compose([
-        transforms.Resize((512, 512)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-    ])
+def build_Food101(config, split, transform: Optional[A.Compose] = None):
+    """
+    Build Food-101 dataset with Albumentations support.
+
+    Args:
+        config: Dataset configuration
+        split: Dataset split ('train' or 'test')
+        transform: Optional Albumentations Compose. If None, uses default torchvision transforms.
+
+    Returns:
+        Food-101 dataset
+    """
+    # Use Albumentations if provided, otherwise fallback to default torchvision
+    if transform is not None:
+        final_transform = AlbumentationsWrapper(transform)
+    else:
+        final_transform = _create_default_torchvision_transform('Food101', split)
 
     dataset = datasets.Food101(
-        root=config.get('root', './data/mnist'),
+        root=config.get('root', './data/food101'),
         split=split,
-        transform=transform,
+        transform=final_transform,
         download=config.get('download', True)
     )
 
@@ -73,22 +222,15 @@ def build_Food101(config, split):
 def build_ImageNet_HF(
     config,
     split,
-    transform: Optional[transforms.Compose] = None
+    transform: Optional[A.Compose] = None
 ):
     """
-    Build ImageNet dataset from Hugging Face.
+    Build ImageNet dataset from Hugging Face with Albumentations support.
 
     Args:
-        root (str): Root directory where dataset will be cached
-        is_train (bool): If True, loads training split; otherwise validation split
-        download (bool): If True, downloads the dataset (always True for HF datasets)
-        hf_dataset_name (str): Hugging Face dataset identifier
-            Options:
-            - "imagenet-1k" (ILSVRC2012, 1000 classes) - Requires authentication
-            - "imagenet-1k-mini" (smaller subset for testing)
-        streaming (bool): If True, uses streaming mode (no download, loads on-the-fly)
-        transform (transforms.Compose, optional): Custom transforms to apply.
-            If None, uses default ImageNet transforms.
+        config: Dataset configuration
+        split: Dataset split ('train' or 'test')
+        transform: Optional Albumentations Compose. If None, uses default torchvision transforms.
 
     Returns:
         Dataset: A PyTorch-compatible dataset object
@@ -99,28 +241,11 @@ def build_ImageNet_HF(
         - Run `huggingface-cli login` before using this function
     """
 
-    # Default transforms
-    if transform is None:
-        if split == 'train':
-            transform = transforms.Compose([
-                transforms.RandomResizedCrop(224),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225]
-                )
-            ])
-        else:
-            transform = transforms.Compose([
-                transforms.Resize(256),
-                transforms.CenterCrop(224),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225]
-                )
-            ])
+    # Use Albumentations if provided, otherwise fallback to default torchvision
+    if transform is not None:
+        final_transform = AlbumentationsWrapper(transform)
+    else:
+        final_transform = _create_default_torchvision_transform('ImageNet', split)
 
     split = "train" if (split == 'train') else "validation"
 
@@ -188,7 +313,7 @@ def build_ImageNet_HF(
 
             return image, label
 
-    dataset = HFImageNetDataset(hf_dataset, transform)
+    dataset = HFImageNetDataset(hf_dataset, final_transform)
 
     print(f"ImageNet dataset loaded successfully!")
     if not config.get('streaming', False):
