@@ -7,6 +7,10 @@ dataset:
   type: "CIFAR10"
   root: "./data/cifar10"
   download: true
+  class_subset: [0, 1, 2]
+  sample_subset: 100
+  download_subset: true
+  load_subset: true
 
 # Model configuration
 model:

@@ -8,6 +8,26 @@ from torch.utils.data import Dataset
 from torchvision import datasets, transforms
 
 from data_loaders.builders.classification_data import *
+from data_loaders.subset_wrapper import SubsetDataset
+
+
+def _get_config_value(config, key, default=None):
+    """
+    Get value from config, handling both dict and namespace objects.
+
+    Args:
+        config: Configuration dict or namespace
+        key: Key to retrieve
+        default: Default value if key not found
+
+    Returns:
+        Value from config or default
+    """
+    if isinstance(config, dict):
+        return config.get(key, default)
+    else:
+        return getattr(config, key, default)
+
 
 def build_dataset(
     config: Union[dict, argparse.Namespace],
@@ -40,8 +60,6 @@ def build_dataset(
         raise ValueError("No dataset provided in config.")
 
     dataset_type = dataset_config.get('type', 'MNIST')
-    root = dataset_config.get('root', './data')
-    download = dataset_config.get('download', True)
 
     # TODO: Future - load transforms from config or presets
     # For now, use basic transforms: ToTensor + Normalize
@@ -70,5 +88,43 @@ def build_dataset(
             f"To add more datasets, extend the build_dataset() function in "
             f"datasets/classification_data.py"
         )
+
+    # Apply subset filtering if specified
+    class_subset = dataset_config.get('class_subset', None)
+    sample_subset = dataset_config.get('sample_subset', None)
+    download_subset = dataset_config.get('download_subset', False)
+    load_subset = dataset_config.get('load_subset', False)
+
+    if class_subset is not None or sample_subset is not None:
+        dataset = SubsetDataset(
+            dataset=dataset,
+            class_subset=class_subset,
+            sample_subset=sample_subset,
+            download_subset=download_subset,
+            load_subset=load_subset
+        )
+
+        # Print subset information
+        subset_info = dataset.get_subset_info()
+        print(f"\n{'='*60}")
+        print(f"Dataset Subset Configuration ({split} split)")
+        print(f"{'='*60}")
+        print(f"Original dataset size: {subset_info['original_dataset_size']}")
+        print(f"Subset dataset size: {subset_info['total_samples']}")
+        print(f"Download subset mode: {subset_info['download_subset']}")
+        print(f"Load subset mode: {subset_info['load_subset']}")
+
+        if class_subset is not None:
+            print(f"Selected classes: {subset_info['selected_classes']}")
+            print(f"Number of classes: {subset_info['num_classes']}")
+
+        if sample_subset is not None:
+            print(f"Sample subset parameter: {subset_info['sample_subset']}")
+
+        if 'samples_per_class' in subset_info:
+            print(f"\nSamples per class:")
+            for class_idx, count in sorted(subset_info['samples_per_class'].items()):
+                print(f"  Class {class_idx}: {count} samples")
+        print(f"{'='*60}\n")
 
     return dataset
