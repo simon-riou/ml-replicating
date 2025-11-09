@@ -3,29 +3,45 @@ device: "cuda"
 num_workers: 8
 
 # Hyperparameters
-batch_size: 32
+batch_size: 512
 epochs: 90
 
 # Dataset configuration
 dataset:
   type: "Food101"
-  root: "./data/food101"
+  root: "/data/food101"
   download: true
+  class_subset: 0.3
+  download_subset: true
+  load_subset: true
+
+  train_transforms:
+     preset: "food101_augmented"
+     override:
+       randomresizedcrop:
+         size: [128, 128]
+         scale: [0.8, 1.0]
+  test_transforms: 
+      preset: "food101_basic"
+      override:
+       resize:
+         height: 128
+         width: 128
 
 # Model configuration
 model:
   type: "ViT"
-  img_size: 512
+  img_size: 128
   in_channels: 3
-  patch_size: 16
+  patch_size: 8 # 16 -> 8
   nb_blocks: 8
-  embed_dim: 512
+  embed_dim: 256
   num_heads: 8
-  out_classes: 101
+  out_classes: 30
 
 # Optimizer configuration
 optimizer:
-  type: "Adam"
+  type: "AdamW"
   betas: [0.9, 0.999]
   lr: 0.001
   weight_decay: 0.03
@@ -35,14 +51,16 @@ criterion:
   type: "CrossEntropyLoss"
   label_smoothing: 0.1
 
-# Learning rate scheduler configuration
-scheduler:
-  type: "LinearLR"
-  start_factor: 1
-  end_factor: 0.333333333333
-  total_iters: 10
+# Learning rate schedulers configurations
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+  - type: "CosineAnnealingLR"
+    T_max: 85
+    eta_min: 0.00001
+milestones: [20]
 
 # File save/logs settings
-run_dir: "runs/vit_food101_exp1"
+run_dir: "/runs/vit_food101_30p_classes"
 tb_dir: "tb-output"
 max_keep: 2

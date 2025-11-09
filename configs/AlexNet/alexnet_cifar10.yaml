@@ -12,6 +12,9 @@ dataset:
   download_subset: true
   load_subset: true
 
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
 # Model configuration
 model:
   type: "AlexNet"
