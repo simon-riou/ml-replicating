@@ -14,7 +14,7 @@ import numpy as np
 from PIL import Image
 
 
-class TorchvisionTransformWrapper(A.BasicTransform):
+class TorchvisionTransformWrapper(A.ImageOnlyTransform):
     """
     Wrapper to use torchvision transforms within albumentations pipeline.
 
@@ -37,10 +37,6 @@ class TorchvisionTransformWrapper(A.BasicTransform):
         if isinstance(transformed, Image.Image):
             return np.array(transformed)
         return transformed
-
-    @property
-    def targets(self):
-        return {"image": self.apply}
 
     def get_transform_init_args_names(self):
         return ("transform",)

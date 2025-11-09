@@ -139,6 +139,7 @@ def evaluate(model, criterion, optimizer, data_loader, device, args, writer=None
     if writer:
         writer.add_scalar(f'eval/loss{log_suffix}', avg_loss, epoch)
         writer.add_scalar(f'eval/acc1{log_suffix}', avg_acc1, epoch)
+        writer.add_scalar(f'eval/acc5{log_suffix}', avg_acc5, epoch)
 
     # Determine if this is the best model
     is_best = avg_acc1 > best_acc1
