@@ -1,25 +1,62 @@
 """
-Transform builder for dataset augmentation using Albumentations.
+Transform builder for dataset augmentation using Albumentations and Torchvision.
 
 This module provides functionality to build data transforms from YAML configuration,
-supporting both presets and custom transform lists.
+supporting both presets and custom transform lists. It supports both albumentations
+and torchvision transforms (e.g., RandAugment).
 """
 
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from typing import Any, Dict, List, Union, Optional
+import torchvision.transforms.v2 as transforms_v2
+import numpy as np
+from PIL import Image
+
+
+class TorchvisionTransformWrapper(A.BasicTransform):
+    """
+    Wrapper to use torchvision transforms within albumentations pipeline.
+
+    This wrapper converts images between numpy arrays (used by albumentations)
+    and PIL Images (used by torchvision), applies the torchvision transform,
+    and converts back.
+    """
+
+    def __init__(self, transform, always_apply=False, p=1.0):
+        super().__init__(always_apply=always_apply, p=p)
+        self.transform = transform
+
+    def apply(self, img, **params):
+        """Apply torchvision transform to numpy image."""
+        # Convert numpy array (HWC) to PIL Image
+        pil_img = Image.fromarray(img)
+        # Apply torchvision transform
+        transformed = self.transform(pil_img)
+        # Convert back to numpy array
+        if isinstance(transformed, Image.Image):
+            return np.array(transformed)
+        return transformed
+
+    @property
+    def targets(self):
+        return {"image": self.apply}
+
+    def get_transform_init_args_names(self):
+        return ("transform",)
 
 
 def build_single_transform(transform_config: Dict[str, Any]) -> A.BasicTransform:
     """
-    Build a single Albumentations transform from configuration.
+    Build a single transform from configuration (Albumentations or Torchvision).
 
     Args:
         transform_config: Dictionary with 'type' and optional parameters
                          Example: {'type': 'HorizontalFlip', 'p': 0.5}
+                         For torchvision: {'type': 'RandAugment', 'num_ops': 2, 'magnitude': 9}
 
     Returns:
-        Albumentations transform instance
+        Transform instance (Albumentations or wrapped Torchvision)
 
     Raises:
         ValueError: If transform type is not found or invalid
@@ -33,13 +70,29 @@ def build_single_transform(transform_config: Dict[str, Any]) -> A.BasicTransform
     transform_type = transform_config['type']
     transform_params = {k: v for k, v in transform_config.items() if k != 'type'}
 
+    # List of torchvision-specific transforms
+    TORCHVISION_TRANSFORMS = ['RandAugment', 'TrivialAugmentWide', 'AutoAugment']
+
+    # Check if it's a torchvision transform
+    if transform_type in TORCHVISION_TRANSFORMS:
+        if hasattr(transforms_v2, transform_type):
+            torchvision_class = getattr(transforms_v2, transform_type)
+            try:
+                torchvision_transform = torchvision_class(**transform_params)
+                # Wrap it to work with albumentations
+                return TorchvisionTransformWrapper(torchvision_transform)
+            except Exception as e:
+                raise ValueError(f"Error creating torchvision transform {transform_type} with params {transform_params}: {e}")
+        else:
+            raise ValueError(f"Transform type '{transform_type}' not found in torchvision.transforms.v2")
+
     # Get the transform class from Albumentations
     if hasattr(A, transform_type):
         transform_class = getattr(A, transform_type)
     elif transform_type == 'ToTensorV2':
         transform_class = ToTensorV2
     else:
-        raise ValueError(f"Transform type '{transform_type}' not found in albumentations")
+        raise ValueError(f"Transform type '{transform_type}' not found in albumentations or torchvision")
 
     try:
         return transform_class(**transform_params)
