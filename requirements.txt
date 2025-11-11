@@ -9,3 +9,4 @@ datasets
 huggingface_hub
 pillow
 albumentations
+torch-summary

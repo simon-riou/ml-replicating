@@ -210,7 +210,6 @@ class UNet(nn.Module):
         for block in self.encoder_blocks:
             if isinstance(block, SelfAttentionBlock):
                 h = block(h)
-                skip_connections.append(h)
             else:
                 h = block(h, time_emb)
                 skip_connections.append(h)
@@ -229,8 +228,6 @@ class UNet(nn.Module):
 
         for block in self.decoder_blocks:
             if isinstance(block, SelfAttentionBlock):
-                skip = skip_connections.pop()
-                h = h + skip
                 h = block(h)
             else:
                 skip = skip_connections.pop()

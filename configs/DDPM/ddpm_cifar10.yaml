@@ -11,8 +11,6 @@ dataset:
   train_transforms: "cifar10_basic"
   test_transforms: "cifar10_basic"
 
-  image_size: 32
-
 # Model configuration
 model:
   type: "DDPM"
@@ -45,6 +43,7 @@ optimizer:
 # Sampling/Evaluation parameters
 num_sample_images: 64
 sample_every_n_epochs: 10
+sample_image_size: 32
 
 # File save/logs settings
 run_dir: "runs/ddpm_cifar10"
