@@ -1,0 +1,59 @@
+# Device configuration
+device: "cuda"
+num_workers: 4
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Use basic transforms (just ToTensor and normalize)
+  # DDPM expects images in [0, 1] range (will be normalized to [-1, 1] in trainer)
+  train_transforms: "cifar10_basic"
+  test_transforms: "cifar10_basic"
+
+  img_size: 32
+
+# Model configuration
+model:
+  type: "DDPM"
+
+  # UNet architecture parameters
+  in_channels: 3
+  out_channels: 3
+  model_channels: 128          # Base channel count
+  channel_mult: [1, 2, 2, 2]   # Channel multipliers at each resolution
+  num_res_blocks: 2            # Number of ResNet blocks per resolution
+  time_emb_dim: 256            # Time embedding dimension
+  dropout: 0.1                 # Dropout probability
+
+  # Diffusion parameters
+  num_timesteps: 1000          # Number of diffusion steps (T)
+  beta_start: 0.0001           # Starting beta for noise schedule
+  beta_end: 0.02               # Ending beta for noise schedule
+
+# Training hyperparameters
+batch_size: 128
+epochs: 500
+clip_grad_norm: 1.0
+
+# Optimizer configuration
+optimizer:
+  type: "AdamW"
+  lr: 0.0002
+  betas: [0.9, 0.999]
+  weight_decay: 0.0
+
+# No criterion needed
+# No scheduler needed
+
+# Sampling/Evaluation parameters
+num_sample_images: 64          # Number of images to generate during evaluation
+sample_every_n_epochs: 10      # Generate samples every N epochs
+
+# File save/logs settings
+run_dir: "runs/ddpm_cifar10"
+tb_dir: "tb-output/ddpm_cifar10"
+max_keep: 3                    # Keep 3 best checkpoints
+no_save: false                 # Set to true to disable checkpoint saving
