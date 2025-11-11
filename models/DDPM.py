@@ -69,6 +69,55 @@ class ResNetBlock(nn.Module):
 
         return h + residual
 
+class SelfAttentionBlock(nn.Module):
+    def __init__(self, C):
+        super(SelfAttentionBlock, self).__init__()
+        
+        self.C = C
+        self.d = C // 8
+        self.scale = self.d ** -0.5
+        
+        self.q_proj = nn.Conv2d(C, self.d, kernel_size=1)
+        self.k_proj = nn.Conv2d(C, self.d, kernel_size=1)
+        self.v_proj = nn.Conv2d(C, self.d, kernel_size=1)
+        
+        self.out_proj = nn.Conv2d(self.d, C, kernel_size=1)
+        
+        self.norm = nn.GroupNorm(32, C)
+    
+    def forward(self, x):
+        B, C, H, W = x.shape
+        residual = x
+        
+        x = self.norm(x)
+        
+        # Dim after proj -> [B, d, H, W]
+        q = self.q_proj(x)
+        k = self.k_proj(x)
+        v = self.v_proj(x)
+        
+        # Reshape for attention : [B, d, H*W]
+        q = q.view(B, self.d, H * W)
+        k = k.view(B, self.d, H * W)
+        v = v.view(B, self.d, H * W)
+        
+        # for matmul -> [B, H*W, d]
+        q = q.transpose(1, 2)  
+        v = v.transpose(1, 2)
+        
+        # Compute  attention : [B, H*W, H*W]
+        scores = torch.matmul(q, k) * self.scale  # [B, H*W, d] @ [B, d, H*W]
+        attention = torch.softmax(scores, dim=-1)
+        
+        out = torch.matmul(attention, v)  # [B, H*W, d]
+        
+        # Reshape back : [B, d, H, W]
+        out = out.transpose(1, 2).contiguous()
+        out = out.view(B, self.d, H, W)
+        
+        out = self.out_proj(out)  # [B, C, H, W]
+        
+        return out + residual
 
 class UNet(nn.Module):
     def __init__(self, in_channels=3, model_channels=128, out_channels=3,
@@ -100,6 +149,11 @@ class UNet(nn.Module):
                 ch = out_ch
                 channels.append(ch)
 
+            if level in [1]:
+                self.encoder_blocks.append(
+                    SelfAttentionBlock(ch)
+                )
+
             # Downsample
             if level != len(channel_mult) - 1:
                 self.downsample_blocks.append(
@@ -127,6 +181,11 @@ class UNet(nn.Module):
                 )
                 ch = out_ch
 
+            if level in [1]:
+                self.decoder_blocks.append(
+                    SelfAttentionBlock(ch)
+                )
+
             # Upsample
             if level != 0:
                 self.upsample_blocks.append(
@@ -135,7 +194,7 @@ class UNet(nn.Module):
 
         # Final output
         self.norm_out = nn.GroupNorm(num_groups=32, num_channels=ch, eps=1e-6)
-        self.act_out = nn.SiLU()
+        self.act_out = nn.ReLU()
         self.conv_out = nn.Conv2d(ch, out_channels, kernel_size=3, padding=1)
 
     def forward(self, x, t):
@@ -149,14 +208,18 @@ class UNet(nn.Module):
         downsample_idx = 0
 
         for block in self.encoder_blocks:
-            h = block(h, time_emb)
-            skip_connections.append(h)
-            block_idx += 1
-
-            if block_idx % self.num_res_blocks == 0 and downsample_idx < len(self.downsample_blocks):
-                h = self.downsample_blocks[downsample_idx](h)
+            if isinstance(block, SelfAttentionBlock):
+                h = block(h)
                 skip_connections.append(h)
-                downsample_idx += 1
+            else:
+                h = block(h, time_emb)
+                skip_connections.append(h)
+                block_idx += 1
+
+                if block_idx % self.num_res_blocks == 0 and downsample_idx < len(self.downsample_blocks):
+                    h = self.downsample_blocks[downsample_idx](h)
+                    skip_connections.append(h)
+                    downsample_idx += 1
 
         for block in self.bottleneck:
             h = block(h, time_emb)
@@ -165,14 +228,19 @@ class UNet(nn.Module):
         upsample_idx = 0
 
         for block in self.decoder_blocks:
-            skip = skip_connections.pop()
-            h = torch.cat([h, skip], dim=1)
-            h = block(h, time_emb)
-            block_idx += 1
+            if isinstance(block, SelfAttentionBlock):
+                skip = skip_connections.pop()
+                h = h + skip
+                h = block(h)
+            else:
+                skip = skip_connections.pop()
+                h = torch.cat([h, skip], dim=1)
+                h = block(h, time_emb)
+                block_idx += 1
 
-            if block_idx % (self.num_res_blocks + 1) == 0 and upsample_idx < len(self.upsample_blocks):
-                h = self.upsample_blocks[upsample_idx](h)
-                upsample_idx += 1
+                if block_idx % (self.num_res_blocks + 1) == 0 and upsample_idx < len(self.upsample_blocks):
+                    h = self.upsample_blocks[upsample_idx](h)
+                    upsample_idx += 1
 
         h = self.norm_out(h)
         h = self.act_out(h)
