@@ -49,7 +49,7 @@ CIFAR10_BASIC: List[Dict[str, Any]] = [
 ]
 
 CIFAR10_AUGMENTED: List[Dict[str, Any]] = [
-    {'type': 'RandomCrop', 'height': 32, 'width': 32, 'padding': 4},
+    {'type': 'RandomCrop', 'height': 32, 'width': 32},
     {'type': 'HorizontalFlip', 'p': 0.5},
     {'type': 'Normalize',
      'mean': [0.4914, 0.4822, 0.4465],
