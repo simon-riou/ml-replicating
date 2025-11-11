@@ -121,7 +121,7 @@ class SelfAttentionBlock(nn.Module):
 
 class UNet(nn.Module):
     def __init__(self, in_channels=3, model_channels=128, out_channels=3,
-                 channel_mult=(1, 2, 2, 2), num_res_blocks=2, time_emb_dim=256, dropout=0.1):
+                 channel_mult=(1, 2, 2, 2), num_res_blocks=2, time_emb_dim=128, dropout=0.1):
         super().__init__()
 
         self.in_channels = in_channels
@@ -181,7 +181,7 @@ class UNet(nn.Module):
                 )
                 ch = out_ch
 
-            if level in [1]:
+            if level in [3]:
                 self.decoder_blocks.append(
                     SelfAttentionBlock(ch)
                 )
