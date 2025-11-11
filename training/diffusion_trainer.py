@@ -146,15 +146,21 @@ class DiffusionTrainer(BaseTrainer):
 
         print(f"\nGenerating {self.num_sample_images} samples...")
 
-        if hasattr(self.args.dataset, 'image_size'):
+        if isinstance(self.args.dataset, dict):
+            image_size = self.args.dataset.get('image_size')
+            if image_size is None:
+                raise ValueError('[!] Config must specify \'image_size\' in dataset section.')
+        elif hasattr(self.args.dataset, 'image_size'):
             image_size = self.args.dataset.image_size
         else:
-            raise ValueError('[!] Config must specify \'image_size\' in config in dataset section.')
+            raise ValueError('[!] Config must specify \'image_size\' in dataset section.')
 
-        if hasattr(self.args.model, 'in_channels'):
+        if isinstance(self.args.model, dict):
+            in_channels = self.args.model.get('in_channels', 3)
+        elif hasattr(self.args.model, 'in_channels'):
             in_channels = self.args.model.in_channels
         else:
-            raise ValueError('[!] Config must specify \'in_channels\' in config in model section.')
+            in_channels = 3
 
         # Generate samples
         samples = self.model.sample(

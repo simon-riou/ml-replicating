@@ -11,7 +11,7 @@ dataset:
   train_transforms: "cifar10_basic"
   test_transforms: "cifar10_basic"
 
-  img_size: 32
+  image_size: 32
 
 # Model configuration
 model:
