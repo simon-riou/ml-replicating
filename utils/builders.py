@@ -48,9 +48,12 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'MLP':
         from models.MLP import MLP
         return MLP(**model_params)
+    elif model_type == 'DDPM':
+        from models.DDPM import DDPM
+        return DDPM(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, MLP")
+                         f"Supported types: ViT, AlexNet, MLP, DDPM")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -246,3 +249,48 @@ def _build_single_scheduler(sched_type: str, optimizer: torch.optim.Optimizer, s
         raise ValueError(f"Unsupported scheduler type: {sched_type}. "
                          f"Supported types: LinearLR, CosineAnnealingLR, StepLR, "
                          f"ExponentialLR, CosineAnnealingWarmRestarts, MultiStepLR")
+
+
+def build_trainer(config: Any):
+    """
+    Build trainer from configuration based on model type.
+
+    Routes to the appropriate trainer class based on the model type:
+    - Classification models (ViT, AlexNet, MLP) -> ClassificationTrainer
+    - Diffusion models (DDPM) -> DiffusionTrainer
+
+    Args:
+        config: Configuration object with model settings
+
+    Returns:
+        Appropriate trainer instance (ClassificationTrainer or DiffusionTrainer)
+
+    Raises:
+        ValueError: If model type is not specified or trainer not found
+    """
+    if not hasattr(config, 'model'):
+        raise ValueError("Configuration must contain 'model' section")
+
+    model_config = config.model
+
+    # Get model type
+    if isinstance(model_config, dict):
+        model_type = model_config.get('type')
+    else:
+        model_type = model_config.type if hasattr(model_config, 'type') else None
+
+    if model_type is None:
+        raise ValueError("Model type must be specified in config")
+
+    # Route to appropriate trainer
+    if model_type in ['ViT', 'AlexNet', 'MLP']:
+        # Classification models
+        from training.classification_trainer import ClassificationTrainer
+        return ClassificationTrainer(config)
+    elif model_type == 'DDPM':
+        # Diffusion models
+        from training.diffusion_trainer import DiffusionTrainer
+        return DiffusionTrainer(config)
+    else:
+        raise ValueError(f"No trainer found for model type: {model_type}. "
+                         f"Supported types: ViT, AlexNet, MLP, DDPM")

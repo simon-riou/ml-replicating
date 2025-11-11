@@ -3,7 +3,7 @@ import yaml
 import sys
 from pprint import pprint
 
-from training.trainer import train
+from utils.builders import build_trainer
 
 # TODO: Fix the param in argparse -> little by little
 # - Add verbose
@@ -130,5 +130,7 @@ def get_args_parser(add_help=True):
 
 if __name__ == "__main__":
     args = get_args_parser().parse_args()
-    
-    train(args)
+
+    trainer = build_trainer(args)
+
+    trainer.train()
