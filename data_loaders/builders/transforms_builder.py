@@ -23,8 +23,8 @@ class TorchvisionTransformWrapper(A.ImageOnlyTransform):
     and converts back.
     """
 
-    def __init__(self, transform, always_apply=False, p=1.0):
-        super().__init__(always_apply=always_apply, p=p)
+    def __init__(self, transform, p=1.0):
+        super().__init__(p=p)
         self.transform = transform
 
     def apply(self, img, **params):
