@@ -8,7 +8,11 @@ dataset:
   root: "./data/cifar10"
   download: true
 
-  train_transforms: "cifar10_basic"
+  train_transforms:
+    preset: "cifar10_basic"
+    additional:
+      - type: "HorizontalFlip"
+        p: 0.5
   test_transforms: "cifar10_basic"
 
 # Model configuration
@@ -20,7 +24,7 @@ model:
   model_channels: 128
   channel_mult: [1, 2, 2, 2]
   num_res_blocks: 2
-  time_emb_dim: 256
+  time_emb_dim: 128
   dropout: 0.1
 
   # Diffusion parameters
@@ -31,14 +35,11 @@ model:
 # Training hyperparameters
 batch_size: 128
 epochs: 500
-clip_grad_norm: 1.0
 
 # Optimizer configuration
 optimizer:
-  type: "AdamW"
+  type: "Adam"
   lr: 0.0002
-  betas: [0.9, 0.999]
-  weight_decay: 0.0
 
 # Sampling/Evaluation parameters
 num_sample_images: 64
