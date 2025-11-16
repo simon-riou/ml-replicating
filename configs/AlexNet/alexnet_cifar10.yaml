@@ -4,51 +4,73 @@ num_workers: 8
 
 # Dataset configuration
 dataset:
-  type: "CIFAR10"
+  type: "CIFAR10"          
   root: "./data/cifar10"
-  download: true
-  class_subset: [0, 1, 2]
-  sample_subset: 100
-  download_subset: true
-  load_subset: true
+  download: true           
+  
+  # Transforms: CIFAR-10 de base + augmentations supplémentaires
+  # Transforms selon Section 2 et 4.1
+  train_transforms:
+    - type: "RandomResizedCrop"
+      size: [224, 224]
+      scale: [0.8, 1.0]
+    - type: "HorizontalFlip"
+      p: 0.5
+    - type: "ColorJitter"
+      p: 0.5
+    - type: "RandomRotate90"
+      p: 0.3
+    - type: "GaussNoise"
+      p: 0.3
+    - type: "Normalize"
+      mean: [0.4914, 0.4822, 0.4465]
+      std: [0.2470, 0.2435, 0.2616]
+      max_pixel_value: 255.0
+    - type: "ToTensorV2"
 
-  train_transforms: "cifar10_augmented"
   test_transforms: "cifar10_basic"
 
-# Model configuration
+# Model configuration (Section 3)
 model:
   type: "AlexNet"
-  in_channel: 3
-  out_channel: 10
+  in_channels: 3
+  out_classes: 1000
 
-# Hyperparameters
-batch_size: 16
-epochs: 1
-clip_grad_norm: 1.0
+# Hyperparameters (Section 5)
+batch_size: 128             # Papier: 128 examples
+epochs: 90                  # Papier: ~90 cycles
 
-# Optimizer configuration
+# Optimizer (Section 5)
 optimizer:
   type: "SGD"
-  lr: 0.03
+  lr: 0.01                  # Initial learning rate
   momentum: 0.9
-  weight_decay: 0.0
+  weight_decay: 0.0005      # Papier: 0.0005
 
-# Criterion (loss function) configuration
+# Criterion (Section 3.5)
 criterion:
-  type: "CrossEntropyLoss"
-  label_smoothing: 0.1
+  type: "CrossEntropyLoss"  # Multinomial logistic regression
+  label_smoothing: 0.0      # Pas utilisé dans le papier
 
-# Learning rate scheduler configuration
+# Learning rate scheduler (Section 5)
+# Papier: "divide by 10 when validation error rate stopped improving"
+# Approximation: diviser par 10 à epochs 30, 60, 80
 scheduler_list:
-  - type: "LinearLR"
-    start_factor: 0.1
-    total_iters: 5
-  - type: "CosineAnnealingLR"
-    T_max: 85
-    eta_min: 0.00001
-milestones: [5]
+  - type: "ConstantLR"
+    factor: 1.0
+    total_iters: 30
+  - type: "ConstantLR"
+    factor: 0.1
+    total_iters: 30
+  - type: "ConstantLR"
+    factor: 0.01
+    total_iters: 20
+  - type: "ConstantLR"
+    factor: 0.001
+    total_iters: 10
+milestones: [30, 60, 80]
 
 # File save/logs settings
-run_dir: "runs/alexnet_cifar10_exp1"
-tb_dir: "tb-output"
-max_keep: 2
+run_dir: "runs/alexnet_cifar10"
+tb_dir: "runs/alexnet_cifar10/tb-output"
+max_keep: 3

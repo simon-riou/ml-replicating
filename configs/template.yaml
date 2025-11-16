@@ -56,7 +56,7 @@ dataset:                    # MANDATORY                                   (defau
 
 # Model configuration
 model:                      # MANDATORY                                    (default: Only available in config file not in CLI)
-  type: "ViT"               # MANDATORY Model type: "ViT", "AlexNet", "MLP", etc ...
+  type: "ViT"               # MANDATORY Model type: "ViT", "AlexNet_simplified", "MLP", etc ...
   img_size: 224             # Image size (ViT)
   in_channels: 3            # Number of input channels
   patch_size: 16            # Patch size (ViT)
