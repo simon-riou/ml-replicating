@@ -45,6 +45,9 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'AlexNet':
         from models.AlexNet import AlexNet
         return AlexNet(**model_params)
+    elif model_type == 'AlexNet_simplified':
+        from models.AlexNet_simplified import AlexNet_simplified
+        return AlexNet_simplified(**model_params)
     elif model_type == 'MLP':
         from models.MLP import MLP
         return MLP(**model_params)
@@ -53,7 +56,7 @@ def build_model(config: Any) -> nn.Module:
         return DDPM(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, MLP, DDPM")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -245,10 +248,12 @@ def _build_single_scheduler(sched_type: str, optimizer: torch.optim.Optimizer, s
         return torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, **sched_params)
     elif sched_type == 'MultiStepLR':
         return torch.optim.lr_scheduler.MultiStepLR(optimizer, **sched_params)
+    elif sched_type == 'ConstantLR':
+        return torch.optim.lr_scheduler.ConstantLR(optimizer, **sched_params)
     else:
         raise ValueError(f"Unsupported scheduler type: {sched_type}. "
                          f"Supported types: LinearLR, CosineAnnealingLR, StepLR, "
-                         f"ExponentialLR, CosineAnnealingWarmRestarts, MultiStepLR")
+                         f"ExponentialLR, CosineAnnealingWarmRestarts, MultiStepLR, ConstantLR")
 
 
 def build_trainer(config: Any):
@@ -256,7 +261,7 @@ def build_trainer(config: Any):
     Build trainer from configuration based on model type.
 
     Routes to the appropriate trainer class based on the model type:
-    - Classification models (ViT, AlexNet, MLP) -> ClassificationTrainer
+    - Classification models (ViT, AlexNet, AlexNet_simplified, MLP) -> ClassificationTrainer
     - Diffusion models (DDPM) -> DiffusionTrainer
 
     Args:
@@ -283,7 +288,7 @@ def build_trainer(config: Any):
         raise ValueError("Model type must be specified in config")
 
     # Route to appropriate trainer
-    if model_type in ['ViT', 'AlexNet', 'MLP']:
+    if model_type in ['ViT', 'AlexNet', 'AlexNet_simplified', 'MLP']:
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)
@@ -293,4 +298,4 @@ def build_trainer(config: Any):
         return DiffusionTrainer(config)
     else:
         raise ValueError(f"No trainer found for model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, MLP, DDPM")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM")
