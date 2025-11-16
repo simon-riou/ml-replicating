@@ -151,7 +151,7 @@ class DiffusionTrainer(BaseTrainer):
             if sample_image_size is None:
                 raise ValueError('[!] Config must specify \'sample_image_size\'.')
         elif hasattr(self.args, 'sample_image_size'):
-            sample_image_size = self.args.image_size
+            sample_image_size = self.args.sample_image_size
         else:
             raise ValueError('[!] Config must specify \'sample_image_size\'.')
 
