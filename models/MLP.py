@@ -24,8 +24,12 @@ class MLP(nn.Module):
     def forward(self, x):
         if self.num_layers == 1:
             return self.first_layer(x)
-        
+        x = self.first_layer(x)
         for _ in range(self.num_layers - 2):
             x = self.hidden_layer(x)
-
         return self.final_layer(x)
+
+if __name__ == "__main__":
+    from torchsummary import summary
+    model = MLP(in_features=784, hidden_features=256, out_features=10, num_layers=3)
+    summary(model, (784, ))

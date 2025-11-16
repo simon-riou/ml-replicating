@@ -115,3 +115,8 @@ class ViT(nn.Module):
 
         x = self.norm(x)
         return self.classification_head(x[:,0])
+
+if __name__ == "__main__":
+    from torchsummary import summary
+    model = ViT(img_size=224, in_channels=3, patch_size=16, nb_blocks=12, embed_dim=768, num_heads=12, out_classes=1000)
+    summary(model, (3, 224, 224))

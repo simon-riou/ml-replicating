@@ -388,3 +388,11 @@ class DDPM(nn.Module):
             x = self.scheduler.step(noise_pred, t_batch, x)
 
         return x
+
+if __name__ == "__main__":
+    from torchsummary import summary
+    model = DDPM(in_channels=3, model_channels=128, out_channels=3, channel_mult=(1, 2, 2, 2), num_res_blocks=2, time_emb_dim=256)
+    x = torch.randn(1, 3, 32, 32)
+    t = torch.randint(0, 1000, (1,))
+    from torchsummary import summary
+    summary(model.unet, input_data=[x, t])
