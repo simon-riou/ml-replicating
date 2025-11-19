@@ -1,0 +1,54 @@
+# LeNet-5 Configuration for MNIST Dataset
+# Based on "Gradient-Based Learning Applied to Document Recognition" (LeCun et al., 1998)
+
+# Device and workers
+device: "cuda"
+num_workers: 4
+
+# Dataset configuration
+dataset:
+  type: "MNIST"
+  root: "./data/mnist"
+  download: true
+
+  # No subset - use full MNIST dataset
+  class_subset: null
+  sample_subset: null
+
+  # MNIST transforms (28x28 grayscale images)
+  train_transforms: "mnist_augmented"
+  test_transforms: "mnist_basic"
+
+# Model configuration
+model:
+  type: "LeNet5"
+  in_channels: 1        # MNIST is grayscale
+  out_classes: 10       # 10 digits (0-9)
+
+# Training hyperparameters
+batch_size: 128
+epochs: 20
+
+# Optimizer configuration (using SGD as in the original paper)
+optimizer:
+  type: "SGD"
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler
+scheduler_list:
+  - type: "StepLR"
+    step_size: 7
+    gamma: 0.1
+
+milestones: []
+
+# File save/logs settings
+run_dir: "runs/lenet5_mnist"
+tb_dir: "tb-output/lenet5_mnist"
+max_keep: 3
