@@ -1,0 +1,67 @@
+# GoogleLeNet (Inception v1) Configuration for CIFAR-10 Dataset
+# From "Going Deeper with Convolutions" (Szegedy et al., 2014)
+
+# Device and workers
+device: "cuda"
+num_workers: 4
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # No subset - use full CIFAR-10 dataset
+  class_subset: null
+  sample_subset: null
+
+  # CIFAR-10 transforms (32x32 RGB images)
+  train_transforms:
+    preset: "cifar10_augmented"
+  test_transforms:
+    preset: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "GoogleLeNet"
+  in_channels: 3        # CIFAR-10 is RGB
+  out_classes: 10       # 10 classes
+
+# Training hyperparameters
+batch_size: 128
+epochs: 100
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# IMPORTANT: Poids des classifiers auxiliaires
+# GoogleLeNet a 2 classifiers auxiliaires
+# Dans le papier original: poids = 0.3 pour chaque auxiliaire
+aux_classifier_weights: [0.3, 0.3]
+
+# Learning rate scheduler with warmup
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+    total_iters: 5
+  - type: "MultiStepLR"
+    milestones: [50, 75]
+    gamma: 0.1
+
+milestones: [5]
+
+# Gradient clipping (optionnel mais recommandé pour stabilité)
+clip_grad_norm: 1.0
+
+# File save/logs settings
+run_dir: "runs/googlenet_cifar10"
+tb_dir: "tb-output/googlenet_cifar10"
+max_keep: 3

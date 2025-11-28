@@ -1,0 +1,64 @@
+# GoogleLeNet (Inception v1) Configuration for ImageNet Dataset
+# From "Going Deeper with Convolutions" (Szegedy et al., 2014)
+
+# Device and workers
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "ImageNet"
+  root: "./data/imagenet"
+  download: false  # ImageNet doit être téléchargé manuellement
+
+  # ImageNet transforms (224x224 RGB images)
+  train_transforms:
+    preset: "imagenet_augmented"
+  test_transforms:
+    preset: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "GoogleLeNet"
+  in_channels: 3        # RGB images
+  out_classes: 1000     # 1000 ImageNet classes
+
+# Training hyperparameters
+batch_size: 32          # Réduit pour ImageNet
+epochs: 90
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.045             # Papier original: 0.045 avec warmup
+  momentum: 0.9
+  weight_decay: 0.0002
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1  # Optionnel, améliore la généralisation
+
+# IMPORTANT: Poids des classifiers auxiliaires
+# GoogleLeNet a 2 classifiers auxiliaires
+# Dans le papier original: poids = 0.3 pour chaque auxiliaire
+aux_classifier_weights: [0.3, 0.3]
+
+# Learning rate scheduler with warmup
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+    total_iters: 5
+  - type: "CosineAnnealingLR"
+    T_max: 85
+    eta_min: 0.0001
+
+milestones: [5]
+
+# Gradient clipping
+clip_grad_norm: 1.0
+
+# File save/logs settings
+run_dir: "runs/googlenet_imagenet"
+tb_dir: "tb-output/googlenet_imagenet"
+max_keep: 3

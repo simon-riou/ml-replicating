@@ -57,9 +57,12 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'LeNet5':
         from models.LeNet5 import LeNet5
         return LeNet5(**model_params)
+    elif model_type == 'GoogleLeNet':
+        from models.GoogleLeNet import GoogleLeNet
+        return GoogleLeNet(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -295,10 +298,14 @@ def build_trainer(config: Any):
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)
+    elif model_type == 'GoogleLeNet':
+        # Models with auxiliary classifiers
+        from training.auxiliary_classifier_trainer import AuxiliaryClassifierTrainer
+        return AuxiliaryClassifierTrainer(config)
     elif model_type == 'DDPM':
         # Diffusion models
         from training.diffusion_trainer import DiffusionTrainer
         return DiffusionTrainer(config)
     else:
         raise ValueError(f"No trainer found for model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet")
