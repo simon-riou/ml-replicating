@@ -60,9 +60,12 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'GoogleLeNet':
         from models.GoogleLeNet import GoogleLeNet
         return GoogleLeNet(**model_params)
+    elif model_type == 'DenseNet':
+        from models.DenseNet import DenseNet
+        return DenseNet(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -294,7 +297,7 @@ def build_trainer(config: Any):
         raise ValueError("Model type must be specified in config")
 
     # Route to appropriate trainer
-    if model_type in ['ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5']:
+    if model_type in ['ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet']:
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)
@@ -308,4 +311,4 @@ def build_trainer(config: Any):
         return DiffusionTrainer(config)
     else:
         raise ValueError(f"No trainer found for model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet")

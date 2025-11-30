@@ -1,0 +1,63 @@
+# DenseNet-169 Configuration for ImageNet Dataset
+# From "Densely Connected Convolutional Networks" (Huang et al., 2017)
+
+# Device and workers
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "ImageFolder"
+  root: "./data/imagenet"
+  download: false
+
+  # No subset - use full ImageNet dataset
+  class_subset: null
+  sample_subset: null
+
+  # ImageNet transforms (224x224 RGB images)
+  train_transforms:
+    preset: "imagenet_augmented"
+  test_transforms:
+    preset: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "DenseNet"
+  in_channels: 3           # ImageNet is RGB
+  num_classes: 1000        # 1000 classes
+  growth_rate: 32          # Growth rate k
+  teta: 0.5                # Compression factor
+  dense_blocks: [6, 12, 32, 32]  # DenseNet-169 architecture
+
+# Training hyperparameters
+batch_size: 256
+epochs: 90
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  nesterov: true
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler with warmup
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+    total_iters: 5
+  - type: "CosineAnnealingLR"
+    T_max: 85
+    eta_min: 0.0
+
+milestones: [5]
+
+# File save/logs settings
+run_dir: "runs/densenet169_imagenet"
+tb_dir: "tb-output/densenet169_imagenet"
+max_keep: 3

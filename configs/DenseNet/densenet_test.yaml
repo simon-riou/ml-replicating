@@ -1,0 +1,55 @@
+# DenseNet-121 Test Configuration (Quick training on small subset)
+# For integration testing purposes
+
+# Device and workers
+device: "cuda"
+num_workers: 2
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Small subset for quick testing
+  class_subset: [0, 1, 2]  # Only 3 classes
+  sample_subset: 100        # 100 samples per class
+
+  # CIFAR-10 transforms
+  train_transforms:
+    preset: "cifar10_augmented"
+  test_transforms:
+    preset: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "DenseNet"
+  in_channels: 3           # CIFAR-10 is RGB
+  num_classes: 3           # 3 classes for subset
+  growth_rate: 12          # Smaller growth rate for faster testing
+  teta: 0.5                # Compression factor
+  dense_blocks: [6, 6, 6, 6]  # Smaller DenseNet for testing
+
+# Training hyperparameters
+batch_size: 32
+epochs: 2  # Only 2 epochs for testing
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.01
+  momentum: 0.9
+  weight_decay: 0.0001
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# No scheduler for quick test
+scheduler_list: null
+milestones: []
+
+# File save/logs settings
+run_dir: "runs/densenet_test"
+tb_dir: "tb-output/densenet_test"
+max_keep: 1

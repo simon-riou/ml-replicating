@@ -1,0 +1,60 @@
+# DenseNet-121 Configuration for CIFAR-10 Dataset
+# From "Densely Connected Convolutional Networks" (Huang et al., 2017)
+
+# Device and workers
+device: "cuda"
+num_workers: 4
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # No subset - use full CIFAR-10 dataset
+  class_subset: null
+  sample_subset: null
+
+  # CIFAR-10 transforms (32x32 RGB images)
+  train_transforms:
+    preset: "cifar10_augmented"
+  test_transforms:
+    preset: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "DenseNet"
+  in_channels: 3           # CIFAR-10 is RGB
+  num_classes: 10          # 10 classes
+  growth_rate: 32          # Growth rate k (number of feature maps added per layer)
+  teta: 0.5                # Compression factor (reduction rate in transition layers)
+  dense_blocks: [6, 12, 24, 16]  # DenseNet-121 architecture
+
+# Training hyperparameters
+batch_size: 64
+epochs: 300
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+  nesterov: true
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler
+scheduler_list:
+  - type: "MultiStepLR"
+    milestones: [150, 225]
+    gamma: 0.1
+
+milestones: []
+
+# File save/logs settings
+run_dir: "runs/densenet121_cifar10"
+tb_dir: "tb-output/densenet121_cifar10"
+max_keep: 3
