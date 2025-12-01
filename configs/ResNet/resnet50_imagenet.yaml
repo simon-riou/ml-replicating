@@ -1,0 +1,62 @@
+# ResNet-50 Configuration for ImageNet-style Training
+# Based on "Deep Residual Learning for Image Recognition" (He et al., 2015)
+#
+# This configuration follows the paper's ImageNet training protocol:
+# - 90 epochs training
+# - SGD with momentum 0.9
+# - Weight decay 1e-4
+# - Learning rate 0.1, divided by 10 at epochs 30, 60, 80
+# - Batch size 256 (adjust based on GPU memory)
+#
+# Note: For actual ImageNet, you'll need to set up the dataset properly
+# This config assumes you're using ImageFolder or a similar large-scale dataset
+
+# Config specific
+device: "cuda"
+num_workers: 16         # More workers for large datasets
+
+# Dataset configuration
+dataset:
+  type: "ImageFolder"   # Adjust based on your dataset
+  root: "./data/imagenet"
+  download: false       # ImageNet must be downloaded manually
+
+  # ImageNet-style augmentation
+  train_transforms: "imagenet_augmented"
+  test_transforms: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "ResNet50"
+  in_channels: 3
+  num_classes: 1000     # ImageNet has 1000 classes
+
+# Hyperparameters
+# Paper uses batch size 256 distributed across GPUs
+batch_size: 256         # Adjust based on GPU memory (64 or 128 for single GPU)
+epochs: 90
+
+# Optimizer configuration
+# Following paper's ImageNet protocol
+optimizer:
+  type: "SGD"
+  lr: 0.1               # Base learning rate
+  momentum: 0.9
+  weight_decay: 0.0001  # L2 regularization
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler
+# Paper uses step decay: divide by 10 at epochs 30, 60, 80
+scheduler_list:
+  - type: "MultiStepLR"
+    milestones: [30, 60, 80]
+    gamma: 0.1          # Multiply lr by 0.1 at each milestone
+milestones: []          # No scheduler switching, just one scheduler
+
+# File save/logs settings
+run_dir: "runs/resnet50_imagenet"
+tb_dir: "tb-output/resnet50_imagenet"
+max_keep: 5

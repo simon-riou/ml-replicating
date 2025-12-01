@@ -1,0 +1,65 @@
+# ResNet-34 Configuration for CIFAR-100
+# Based on "Deep Residual Learning for Image Recognition" (He et al., 2015)
+#
+# CIFAR-100 is more challenging than CIFAR-10 (100 classes vs 10)
+# This configuration uses:
+# - ResNet-34 for better capacity
+# - Longer training (250 epochs)
+# - More aggressive data augmentation
+# - Label smoothing to prevent overfitting
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR100"
+  root: "./data/cifar100"
+  download: true
+
+  # Use full CIFAR-100 dataset
+  # class_subset: null
+  # sample_subset: null
+
+  # Data augmentation for CIFAR-100
+  train_transforms: "cifar100_augmented"
+  test_transforms: "cifar100_basic"
+
+# Model configuration
+model:
+  type: "ResNet34"
+  in_channels: 3
+  num_classes: 100      # CIFAR-100 has 100 classes
+
+# Hyperparameters
+batch_size: 128
+epochs: 250             # Longer training for CIFAR-100
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0005  # Slightly higher weight decay for CIFAR-100
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1  # Label smoothing helps with fine-grained classification
+
+# Learning rate scheduler
+# Warm-up + cosine annealing
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1
+    total_iters: 5
+  - type: "CosineAnnealingLR"
+    T_max: 245
+    eta_min: 0.00001
+milestones: [5]
+
+# File save/logs settings
+run_dir: "runs/resnet34_cifar100"
+tb_dir: "tb-output/resnet34_cifar100"
+max_keep: 3

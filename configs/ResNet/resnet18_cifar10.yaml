@@ -1,0 +1,67 @@
+# ResNet-18 Configuration for CIFAR-10
+# Based on "Deep Residual Learning for Image Recognition" (He et al., 2015)
+#
+# Training configuration follows the paper's recommendations:
+# - SGD optimizer with momentum
+# - Weight decay for regularization
+# - Learning rate warm-up + cosine annealing
+# - Standard data augmentation for CIFAR-10
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # No subset - use full CIFAR-10
+  # class_subset: null
+  # sample_subset: null
+
+  # Data augmentation for CIFAR-10
+  # Following standard practice: RandomCrop + HorizontalFlip
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "ResNet18"
+  in_channels: 3        # RGB images
+  num_classes: 10       # CIFAR-10 has 10 classes
+
+# Hyperparameters
+# Paper uses batch size 128, but you can adjust based on GPU memory
+batch_size: 128
+epochs: 200             # Standard for CIFAR-10 training
+
+# Optimizer configuration
+# Paper uses SGD with momentum=0.9
+optimizer:
+  type: "SGD"
+  lr: 0.1               # Initial learning rate
+  momentum: 0.9
+  weight_decay: 0.0001  # L2 regularization (1e-4)
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+  # label_smoothing: 0.0  # No label smoothing in original paper
+
+# Learning rate scheduler configuration
+# Warm-up for 5 epochs, then cosine annealing
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.1   # Start at 0.1 * lr = 0.01
+    total_iters: 5      # Warm up for 5 epochs
+  - type: "CosineAnnealingLR"
+    T_max: 195          # Remaining epochs (200 - 5)
+    eta_min: 0.00001    # Minimum learning rate
+milestones: [5]         # Switch to cosine after 5 epochs
+
+# File save/logs settings
+run_dir: "runs/resnet18_cifar10"
+tb_dir: "tb-output/resnet18_cifar10"
+max_keep: 3             # Keep best 3 checkpoints
