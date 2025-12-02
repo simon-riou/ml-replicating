@@ -1,4 +1,4 @@
-__all__ = ["MLP.py", "AlexNet.py", "AlexNet_simplified.py", "ViT.py", "LeNet5.py", "GoogleLeNet.py", "DenseNet.py", "ResNet.py"]
+__all__ = ["MLP.py", "AlexNet.py", "AlexNet_simplified.py", "ViT.py", "LeNet5.py", "GoogleLeNet.py", "DenseNet.py", "ResNet.py", "ResNeXt.py"]
 
 # Import the submodules
 from . import MLP
@@ -9,3 +9,4 @@ from . import LeNet5
 from . import GoogleLeNet
 from . import DenseNet
 from . import ResNet
+from . import ResNeXt

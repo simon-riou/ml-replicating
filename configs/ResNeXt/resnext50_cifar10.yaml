@@ -1,0 +1,64 @@
+# ResNeXt-50 Configuration for CIFAR-10
+# Based on "Aggregated Residual Transformations for Deep Neural Networks" (Xie et al., 2017)
+#
+# Training configuration follows the paper's specifications:
+# - SGD optimizer with momentum 0.9
+# - Weight decay 5e-4
+# - Initial learning rate 0.1
+# - Step decay at epochs 150 and 225
+# - Batch size 128
+# - 300 epochs training
+# - Standard CIFAR-10 augmentation: RandomCrop with padding + RandomHorizontalFlip
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Data augmentation for CIFAR-10
+  # Paper uses: 4-pixel padding, random crop 32x32, random horizontal flip
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "ResNeXt"
+  layers: [3, 4, 6, 3]
+  in_channels: 3        # RGB images
+  num_classes: 10       # CIFAR-10 has 10 classes
+  C: 64
+
+# Hyperparameters
+# Paper specifications for CIFAR-10
+batch_size: 128         # Paper uses batch size 128 on 8 GPUs
+epochs: 300             # Paper trains for 300 epochs
+
+# Optimizer configuration
+# Paper uses SGD with momentum 0.9 and weight decay 5e-4
+optimizer:
+  type: "SGD"
+  lr: 0.1               # Initial learning rate
+  momentum: 0.9
+  weight_decay: 0.0005  # 5e-4 as specified in paper
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler configuration
+# Paper uses step decay: divide by 10 at epochs 150 and 225
+scheduler_list:
+  - type: "MultiStepLR"
+    milestones: [150, 225]
+    gamma: 0.1          # Multiply lr by 0.1 at each milestone
+milestones: []          # No scheduler switching, just one scheduler
+
+# File save/logs settings
+run_dir: "runs/resnext50_cifar10"
+tb_dir: "tb-output/resnext50_cifar10"
+max_keep: 3             # Keep best 3 checkpoints

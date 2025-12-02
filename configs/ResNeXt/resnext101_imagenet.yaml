@@ -1,0 +1,65 @@
+# ResNeXt-101 Configuration for ImageNet (32x4d architecture)
+# Based on "Aggregated Residual Transformations for Deep Neural Networks" (Xie et al., 2017)
+#
+# Training configuration follows the paper's ImageNet specifications:
+# - 90 epochs training
+# - SGD with momentum 0.9
+# - Weight decay 1e-4
+# - Initial learning rate 0.1
+# - Step decay every 30 epochs (divide by 10)
+# - Batch size 256 distributed across 8 GPUs
+#
+# Architecture: ResNeXt-101, 32x4d
+# - 101 layers deep
+# - 32 groups (cardinality C=32)
+# - 4d base width per group
+#
+# This is the deeper variant that achieved excellent results on ImageNet
+
+# Config specific
+device: "cuda"
+num_workers: 16
+
+# Dataset configuration
+dataset:
+  type: "ImageNet"
+  root: "./data/ImageNet"
+  download: false
+
+  train_transforms: "imagenet_augmented"
+  test_transforms: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "ResNeXt"
+  layers: [3, 4, 6, 3]
+  in_channels: 3
+  num_classes: 1000
+  C: 64
+
+# Hyperparameters
+batch_size: 256         # Adjust based on GPU memory
+epochs: 90
+
+# Optimizer configuration
+optimizer:
+  type: "SGD"
+  lr: 0.1
+  momentum: 0.9
+  weight_decay: 0.0001
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler
+scheduler_list:
+  - type: "StepLR"
+    step_size: 30
+    gamma: 0.1
+milestones: []
+
+# File save/logs settings
+run_dir: "runs/resnext101_imagenet"
+tb_dir: "tb-output/resnext101_imagenet"
+max_keep: 5

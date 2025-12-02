@@ -63,6 +63,9 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'DenseNet':
         from models.DenseNet import DenseNet
         return DenseNet(**model_params)
+    elif model_type == 'ResNet':
+        from models.ResNet import ResNet
+        return ResNet(**model_params)
     elif model_type == 'ResNet18':
         from models.ResNet import ResNet18
         return ResNet18(**model_params)
@@ -75,12 +78,30 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'ResNet101':
         from models.ResNet import ResNet101
         return ResNet101(**model_params)
+    elif model_type == 'ResNeXt':
+        from models.ResNeXt import ResNeXt
+        return ResNeXt(**model_params)
     elif model_type == 'ResNet152':
         from models.ResNet import ResNet152
         return ResNet152(**model_params)
+    elif model_type == 'ResNeXt18':
+        from models.ResNeXt import ResNeXt18
+        return ResNeXt18(**model_params)
+    elif model_type == 'ResNeXt34':
+        from models.ResNeXt import ResNeXt34
+        return ResNeXt34(**model_params)
+    elif model_type == 'ResNeXt50':
+        from models.ResNeXt import ResNeXt50
+        return ResNeXt50(**model_params)
+    elif model_type == 'ResNeXt101':
+        from models.ResNeXt import ResNeXt101
+        return ResNeXt101(**model_params)
+    elif model_type == 'ResNeXt152':
+        from models.ResNeXt import ResNeXt152
+        return ResNeXt152(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152, ResNeXt18-34-50-101-152")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -312,7 +333,7 @@ def build_trainer(config: Any):
         raise ValueError("Model type must be specified in config")
 
     # Route to appropriate trainer
-    if model_type in ['ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet']:
+    if model_type in ['ResNet', 'ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNeXt', 'ResNeXt18', 'ResNeXt34', 'ResNeXt50', 'ResNeXt101', 'ResNeXt152', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet']:
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)

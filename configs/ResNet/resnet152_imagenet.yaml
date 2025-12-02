@@ -13,7 +13,7 @@ num_workers: 16
 
 # Dataset configuration
 dataset:
-  type: "ImageFolder"
+  type: "ImageNet"
   root: "./data/imagenet"
   download: false
 

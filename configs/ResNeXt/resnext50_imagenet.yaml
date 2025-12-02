@@ -1,0 +1,71 @@
+# ResNeXt-50 Configuration for ImageNet (32x4d architecture)
+# Based on "Aggregated Residual Transformations for Deep Neural Networks" (Xie et al., 2017)
+#
+# Training configuration follows the paper's ImageNet specifications:
+# - 90 epochs training
+# - SGD with momentum 0.9
+# - Weight decay 1e-4
+# - Initial learning rate 0.1
+# - Step decay every 30 epochs (divide by 10)
+# - Batch size 256 distributed across 8 GPUs
+#
+# Architecture: ResNeXt-50, 32x4d
+# - 32 groups (cardinality C=32)
+# - 4d base width per group
+#
+# Data augmentation follows standard ImageNet training:
+# - Random resized crop to 224x224
+# - Random horizontal flip
+# - Color jitter (brightness, contrast, saturation ±0.4)
+# - Normalization with ImageNet mean/std
+
+# Config specific
+device: "cuda"
+num_workers: 16         # More workers for large datasets like ImageNet
+
+# Dataset configuration
+dataset:
+  type: "ImageNet"   # For ImageNet or ImageNet-style datasets
+  root: "./data/imagenet"
+  download: false       # ImageNet must be downloaded manually
+
+  # ImageNet-style augmentation
+  # Paper uses: RandomResizedCrop, RandomHorizontalFlip, ColorJitter
+  train_transforms: "imagenet_augmented"
+  test_transforms: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "ResNeXt50"
+  in_channels: 3
+  num_classes: 1000     # ImageNet has 1000 classes
+
+# Hyperparameters
+# Paper uses batch size 256 distributed across 8 GPUs (32 per GPU)
+batch_size: 256         # Adjust based on GPU memory (64 or 128 for single GPU)
+epochs: 90              # Paper trains for 90 epochs
+
+# Optimizer configuration
+# Paper uses SGD with momentum 0.9 and weight decay 1e-4
+optimizer:
+  type: "SGD"
+  lr: 0.1               # Base learning rate (0.1 for batch size 256)
+  momentum: 0.9
+  weight_decay: 0.0001  # 1e-4 as specified in paper
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler
+# Paper uses step decay: divide by 10 every 30 epochs
+scheduler_list:
+  - type: "StepLR"
+    step_size: 30       # Decay every 30 epochs
+    gamma: 0.1          # Multiply lr by 0.1
+milestones: []          # No scheduler switching, just one scheduler
+
+# File save/logs settings
+run_dir: "runs/resnext50_imagenet"
+tb_dir: "tb-output/resnext50_imagenet"
+max_keep: 5             # Keep best 5 checkpoints
