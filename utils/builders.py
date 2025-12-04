@@ -99,9 +99,12 @@ def build_model(config: Any) -> nn.Module:
     elif model_type == 'ResNeXt152':
         from models.ResNeXt import ResNeXt152
         return ResNeXt152(**model_params)
+    elif model_type == 'SENet':
+        from models.SENet import SENet
+        return SENet(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152, ResNeXt18-34-50-101-152")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152, ResNeXt18-34-50-101-152, SENet")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -333,7 +336,7 @@ def build_trainer(config: Any):
         raise ValueError("Model type must be specified in config")
 
     # Route to appropriate trainer
-    if model_type in ['ResNet', 'ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNeXt', 'ResNeXt18', 'ResNeXt34', 'ResNeXt50', 'ResNeXt101', 'ResNeXt152', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet']:
+    if model_type in ['ResNet', 'ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNeXt', 'ResNeXt18', 'ResNeXt34', 'ResNeXt50', 'ResNeXt101', 'ResNeXt152', 'SENet', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet']:
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)

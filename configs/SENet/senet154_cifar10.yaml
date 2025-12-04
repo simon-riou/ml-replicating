@@ -1,0 +1,74 @@
+# SENet-154 Configuration for CIFAR-10
+# Based on "Squeeze-and-Excitation Networks" (Hu et al., 2018)
+#
+# Architecture: SENet-154 is constructed by incorporating SE blocks
+# into a modified version of the 64×4d ResNeXt-152
+#
+# Training configuration follows the paper's baseline (ResNet/ResNeXt) specifications:
+# - SGD optimizer with momentum 0.9
+# - Weight decay 1e-4
+# - Multi-step learning rate decay
+# - Standard CIFAR-10 data augmentation
+# - SE reduction ratio r=16
+#
+# Key differences from standard ResNeXt (as per Appendix A):
+# (a) The number of first 1×1 convolutional channels for each bottleneck was halved
+# (b) The first 7×7 convolutional layer was replaced with three consecutive 3×3 layers
+# (c) The 1×1 down-sampling projection with stride-2 was replaced with 3×3 stride-2
+# (d) A dropout layer (ratio 0.2) was inserted before the classification layer
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Data augmentation for CIFAR-10
+  # Paper uses: 4-pixel padding, random crop 32x32, random horizontal flip
+  # Standard normalization: mean=[0.4914, 0.4822, 0.4465], std=[0.2470, 0.2435, 0.2616]
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "SENet"
+  in_channels: 3        # RGB images
+  num_classes: 10       # CIFAR-10 has 10 classes
+  # Architecture: SENet-154 with [3, 8, 36, 3] bottleneck blocks
+  # SE reduction ratio r=16 (hardcoded in model)
+
+# Hyperparameters
+# Paper follows ResNet baseline specifications
+batch_size: 128         # Standard for CIFAR-10
+epochs: 200             # Standard CIFAR-10 training duration
+
+# Optimizer configuration
+# Paper uses SGD with momentum 0.9 and weight decay 1e-4
+optimizer:
+  type: "SGD"
+  lr: 0.1               # Initial learning rate
+  momentum: 0.9
+  weight_decay: 0.0001  # L2 regularization (1e-4 as per ResNet baseline)
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+
+# Learning rate scheduler configuration
+# Paper uses step decay following ResNet baseline
+# Divide by 10 at approximately 50%, 75%, and 90% of training
+# Scaled from original 32k, 48k iterations to 200 epochs
+scheduler_list:
+  - type: "MultiStepLR"
+    milestones: [80, 120, 160]  # ~40%, 60%, 80% of training
+    gamma: 0.1                  # Multiply lr by 0.1 at each milestone
+milestones: []                  # No scheduler switching, just one scheduler
+
+# File save/logs settings
+run_dir: "runs/senet154_cifar10"
+tb_dir: "tb-output/senet154_cifar10"
+max_keep: 3                     # Keep best 3 checkpoints
