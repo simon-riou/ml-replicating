@@ -1,0 +1,72 @@
+# EfficientNet-B0 Configuration for CIFAR-10
+# Based on "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks" (Tan & Le, 2019)
+#
+# EfficientNet-B0 architecture:
+# - Width coefficient: 1.0
+# - Depth coefficient: 1.0
+# - Resolution: 224x224 (but using 32x32 for CIFAR-10)
+# - Dropout rate: 0.2
+#
+# Training configuration follows best practices:
+# - RMSprop optimizer (as used in the paper)
+# - Weight decay for regularization
+# - Exponential decay learning rate schedule
+# - Standard data augmentation for CIFAR-10
+# - Stochastic depth (drop connect) built into MBConv blocks
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Data augmentation for CIFAR-10
+  # Paper uses: AutoAugment for ImageNet, but we use standard CIFAR-10 augmentation
+  # RandomCrop + HorizontalFlip + normalization
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "EfficientNet"
+  version: "b0"         # EfficientNet-B0 (1.0x width, 1.0x depth)
+  in_channels: 3        # RGB images
+  num_classes: 10       # CIFAR-10 has 10 classes
+
+# Hyperparameters
+# Paper uses batch size 2048 with distributed training
+# Using 128 for single GPU CIFAR-10 training
+batch_size: 128
+epochs: 350             # EfficientNet benefits from longer training
+
+# Optimizer configuration
+# Paper uses RMSprop with decay 0.9, momentum 0.9
+optimizer:
+  type: "RMSprop"
+  lr: 0.256             # Base lr = 0.256 for batch size 256 (scaled linearly)
+  momentum: 0.9
+  weight_decay: 0.00001 # L2 regularization (1e-5)
+  alpha: 0.9            # RMSprop decay rate
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+  # label_smoothing: 0.1  # Optional: can uncomment for label smoothing
+
+# Learning rate scheduler configuration
+# Paper uses exponential decay every 2.4 epochs with rate 0.97
+# For simplicity, using step decay
+scheduler_list:
+  - type: "StepLR"
+    step_size: 2        # Decay every 2 epochs (approximates 2.4)
+    gamma: 0.97         # Decay rate
+milestones: []          # No scheduler switching
+
+# File save/logs settings
+run_dir: "runs/efficientnet_b0_cifar10"
+tb_dir: "tb-output/efficientnet_b0_cifar10"
+max_keep: 3             # Keep best 3 checkpoints
