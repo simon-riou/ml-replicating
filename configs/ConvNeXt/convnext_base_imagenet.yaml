@@ -1,0 +1,73 @@
+# ConvNeXt-Base Configuration for ImageNet
+# Based on "A ConvNet for the 2020s" (Liu et al., 2022)
+#
+# ConvNeXt-Base architecture:
+# - Base channels: 128
+# - Stage depths: [3, 3, 27, 3]
+# - Channel progression: [128, 256, 512, 1024]
+# - Layer scale init: 1e-6
+# - Stochastic depth rate: 0.5
+#
+# Training configuration follows the paper's ImageNet-1K training protocol:
+# - 300 epochs with AdamW optimizer
+# - Base learning rate: 4e-3 for batch size 4096
+# - Weight decay: 0.05
+# - Cosine learning rate schedule with 20 epoch warmup
+# - Label smoothing: 0.1
+# - Mixup alpha: 0.8, Cutmix alpha: 1.0
+# - Random augmentation (RandAugment)
+# - Random erasing: 0.25
+# - Stochastic depth: 0.5
+#
+# Expected ImageNet-1K Top-1 Accuracy: ~83.8%
+# Parameters: ~88.6M
+
+# Config specific
+device: "cuda"
+num_workers: 16
+
+# Dataset configuration
+dataset:
+  type: "ImageNet"
+  root: "./data/imagenet"
+  download: false
+
+  train_transforms: "imagenet_augmented"
+  test_transforms: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "ConvNeXtB"     # ConvNeXt-Base
+  in_channels: 3
+  num_classes: 1000
+
+# Hyperparameters
+batch_size: 256         # Adjust based on GPU memory
+epochs: 300
+
+# Optimizer configuration
+optimizer:
+  type: "AdamW"
+  lr: 0.00025           # Scaled from 4e-3 for batch size 256
+  betas: [0.9, 0.999]
+  weight_decay: 0.05
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1
+
+# Learning rate scheduler
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.001
+    total_iters: 20
+  - type: "CosineAnnealingLR"
+    T_max: 280
+    eta_min: 0.00000001
+milestones: [20]
+
+# File save/logs settings
+run_dir: "runs/convnext_base_imagenet"
+tb_dir: "tb-output/convnext_base_imagenet"
+max_keep: 5

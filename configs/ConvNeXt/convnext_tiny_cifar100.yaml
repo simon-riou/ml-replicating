@@ -1,0 +1,72 @@
+# ConvNeXt-Tiny Configuration for CIFAR-100
+# Based on "A ConvNet for the 2020s" (Liu et al., 2022)
+#
+# ConvNeXt-Tiny architecture (adapted for CIFAR-100):
+# - Base channels: 96
+# - Stage depths: [3, 3, 9, 3]
+# - Channel progression: [96, 192, 384, 768]
+# - Layer scale init: 1e-6
+# - Stochastic depth rate: 0.1
+#
+# Training configuration adapted for CIFAR-100:
+# - 200 epochs with AdamW optimizer
+# - Learning rate: 5e-4
+# - Weight decay: 0.05
+# - Cosine learning rate schedule with 10 epoch warmup
+# - Label smoothing: 0.1
+# - Standard CIFAR-100 augmentation
+# - Image size: 32x32 (CIFAR-100 native resolution)
+#
+# CIFAR-100 has 100 fine-grained classes with only 500 images per class,
+# making it more challenging than CIFAR-10.
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR100"
+  root: "./data/cifar100"
+  download: true
+
+  # CIFAR-100 specific augmentation
+  train_transforms: "cifar100_augmented"
+  test_transforms: "cifar100_basic"
+
+# Model configuration
+model:
+  type: "ConvNeXtT"     # ConvNeXt-Tiny
+  in_channels: 3
+  num_classes: 100      # CIFAR-100 has 100 classes
+
+# Hyperparameters
+batch_size: 128
+epochs: 200
+
+# Optimizer configuration
+optimizer:
+  type: "AdamW"
+  lr: 0.0005            # 5e-4
+  betas: [0.9, 0.999]
+  weight_decay: 0.05
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1
+
+# Learning rate scheduler
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.01
+    total_iters: 10
+  - type: "CosineAnnealingLR"
+    T_max: 190
+    eta_min: 0.00000001
+milestones: [10]
+
+# File save/logs settings
+run_dir: "runs/convnext_tiny_cifar100"
+tb_dir: "tb-output/convnext_tiny_cifar100"
+max_keep: 3

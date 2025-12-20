@@ -106,9 +106,24 @@ def build_model(config: Any) -> nn.Module:
         from models.EfficientNet import get_efficientnet
         version = model_params.pop('version', 'b0')
         return get_efficientnet(version=version, **model_params)
+    elif model_type == 'ConvNeXtT':
+        from models.ConvNeXt import ConvNeXtT
+        return ConvNeXtT(**model_params)
+    elif model_type == 'ConvNeXtS':
+        from models.ConvNeXt import ConvNeXtS
+        return ConvNeXtS(**model_params)
+    elif model_type == 'ConvNeXtB':
+        from models.ConvNeXt import ConvNeXtB
+        return ConvNeXtB(**model_params)
+    elif model_type == 'ConvNeXtL':
+        from models.ConvNeXt import ConvNeXtL
+        return ConvNeXtL(**model_params)
+    elif model_type == 'ConvNeXtXL':
+        from models.ConvNeXt import ConvNeXtXL
+        return ConvNeXtXL(**model_params)
     else:
         raise ValueError(f"Unsupported model type: {model_type}. "
-                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152, ResNeXt18-34-50-101-152, SENet, EfficientNet")
+                         f"Supported types: ViT, AlexNet, AlexNet_simplified, MLP, DDPM, LeNet5, GoogleLeNet, DenseNet, ResNet18-34-50-101-152, ResNeXt18-34-50-101-152, SENet, EfficientNet, ConvNeXtT-S-B-L-XL")
 
 
 def build_optimizer(config: Any, model_params: Iterator[torch.nn.Parameter]) -> torch.optim.Optimizer:
@@ -340,7 +355,7 @@ def build_trainer(config: Any):
         raise ValueError("Model type must be specified in config")
 
     # Route to appropriate trainer
-    if model_type in ['ResNet', 'ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNeXt', 'ResNeXt18', 'ResNeXt34', 'ResNeXt50', 'ResNeXt101', 'ResNeXt152', 'SENet', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet', 'EfficientNet']:
+    if model_type in ['ResNet', 'ResNet18', 'ResNet34', 'ResNet50', 'ResNet101', 'ResNet152', 'ResNeXt', 'ResNeXt18', 'ResNeXt34', 'ResNeXt50', 'ResNeXt101', 'ResNeXt152', 'SENet', 'ViT', 'AlexNet', 'AlexNet_simplified', 'MLP', 'LeNet5', 'DenseNet', 'EfficientNet', 'ConvNeXtT', 'ConvNeXtS', 'ConvNeXtB', 'ConvNeXtL', 'ConvNeXtXL']:
         # Classification models
         from training.classification_trainer import ClassificationTrainer
         return ClassificationTrainer(config)

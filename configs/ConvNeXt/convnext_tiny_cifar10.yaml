@@ -1,0 +1,74 @@
+# ConvNeXt-Tiny Configuration for CIFAR-10
+# Based on "A ConvNet for the 2020s" (Liu et al., 2022)
+#
+# ConvNeXt-Tiny architecture (adapted for CIFAR-10):
+# - Base channels: 96
+# - Stage depths: [3, 3, 9, 3]
+# - Channel progression: [96, 192, 384, 768]
+# - Layer scale init: 1e-6
+# - Stochastic depth rate: 0.1
+#
+# Training configuration adapted for CIFAR-10:
+# - 200 epochs with AdamW optimizer
+# - Learning rate: 5e-4 (tuned for smaller dataset)
+# - Weight decay: 0.05
+# - Cosine learning rate schedule with 10 epoch warmup
+# - Label smoothing: 0.1
+# - Standard CIFAR-10 augmentation
+# - Image size: 32x32 (CIFAR-10 native resolution)
+#
+# Note: CIFAR-10 has only 50k training images vs 1.2M for ImageNet,
+# so we use lighter augmentation and fewer epochs compared to ImageNet training.
+
+# Config specific
+device: "cuda"
+num_workers: 8
+
+# Dataset configuration
+dataset:
+  type: "CIFAR10"
+  root: "./data/cifar10"
+  download: true
+
+  # Standard CIFAR-10 augmentation
+  train_transforms: "cifar10_augmented"
+  test_transforms: "cifar10_basic"
+
+# Model configuration
+model:
+  type: "ConvNeXtT"     # ConvNeXt-Tiny
+  in_channels: 3
+  num_classes: 10       # CIFAR-10 has 10 classes
+
+# Hyperparameters
+batch_size: 128         # Standard for CIFAR-10
+epochs: 200
+
+# Optimizer configuration
+# Using AdamW as in the paper
+optimizer:
+  type: "AdamW"
+  lr: 0.0005            # 5e-4, tuned for CIFAR-10
+  betas: [0.9, 0.999]
+  weight_decay: 0.05
+
+# Criterion
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1
+
+# Learning rate scheduler
+# Cosine annealing with warmup
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.01  # Start at 1% of base lr
+    total_iters: 10     # 10 epoch warmup
+  - type: "CosineAnnealingLR"
+    T_max: 190          # Remaining epochs (200 - 10)
+    eta_min: 0.00000001
+milestones: [10]
+
+# File save/logs settings
+run_dir: "runs/convnext_tiny_cifar10"
+tb_dir: "tb-output/convnext_tiny_cifar10"
+max_keep: 3

@@ -1,0 +1,79 @@
+# ConvNeXt-Tiny Configuration for ImageNet
+# Based on "A ConvNet for the 2020s" (Liu et al., 2022)
+#
+# ConvNeXt-Tiny architecture:
+# - Base channels: 96
+# - Stage depths: [3, 3, 9, 3]
+# - Channel progression: [96, 192, 384, 768]
+# - Layer scale init: 1e-6
+# - Stochastic depth rate: 0.1
+#
+# Training configuration follows the paper's ImageNet-1K training protocol:
+# - 300 epochs with AdamW optimizer
+# - Base learning rate: 4e-3 for batch size 4096
+# - Weight decay: 0.05
+# - Cosine learning rate schedule with 20 epoch warmup
+# - Label smoothing: 0.1
+# - Mixup alpha: 0.8, Cutmix alpha: 1.0
+# - Random augmentation (RandAugment)
+# - Random erasing: 0.25
+# - Stochastic depth: 0.1
+#
+# Expected ImageNet-1K Top-1 Accuracy: ~82.1%
+# Parameters: ~28.6M
+
+# Config specific
+device: "cuda"
+num_workers: 16         # More workers for large datasets
+
+# Dataset configuration
+dataset:
+  type: "ImageNet"
+  root: "./data/imagenet"
+  download: false       # ImageNet must be downloaded manually
+
+  # ImageNet augmentation following paper
+  # Paper uses: RandAugment, Mixup, Cutmix, Random Erasing
+  train_transforms: "imagenet_augmented"
+  test_transforms: "imagenet_basic"
+
+# Model configuration
+model:
+  type: "ConvNeXtT"     # ConvNeXt-Tiny
+  in_channels: 3
+  num_classes: 1000     # ImageNet has 1000 classes
+
+# Hyperparameters
+# Paper uses batch size 4096 distributed across GPUs
+# Scale learning rate linearly with batch size
+batch_size: 256         # Adjust based on GPU memory (lr = 4e-3 * 256/4096 = 2.5e-4)
+epochs: 300             # Paper trains for 300 epochs
+
+# Optimizer configuration
+# Paper uses AdamW with weight decay 0.05
+optimizer:
+  type: "AdamW"
+  lr: 0.00025           # Scaled from 4e-3 for batch size 256 (4e-3 * 256/4096)
+  betas: [0.9, 0.999]
+  weight_decay: 0.05    # Paper uses 0.05
+
+# Criterion (loss function) configuration
+criterion:
+  type: "CrossEntropyLoss"
+  label_smoothing: 0.1  # Paper uses label smoothing 0.1
+
+# Learning rate scheduler configuration
+# Paper uses cosine annealing with 20 epoch warmup
+scheduler_list:
+  - type: "LinearLR"
+    start_factor: 0.001 # Start at 0.1% of base lr
+    total_iters: 20     # 20 epoch warmup
+  - type: "CosineAnnealingLR"
+    T_max: 280          # Remaining epochs after warmup (300 - 20)
+    eta_min: 0.00000001 # Minimum learning rate (1e-8)
+milestones: [20]        # Switch from warmup to cosine at epoch 20
+
+# File save/logs settings
+run_dir: "runs/convnext_tiny_imagenet"
+tb_dir: "tb-output/convnext_tiny_imagenet"
+max_keep: 5             # Keep best 5 checkpoints
